@@ -8,6 +8,9 @@ export interface Table {
   isMyProject: boolean;
   columns: Column[];
   data: TableRow[];
+  disabledCells?: Set<string>;
+  disabledRows?: Set<number>;
+  disabledColumns?: Set<number>;
 }
 
 export interface Column {
@@ -36,8 +39,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [allTables, setAllTables] = useState<Table[]>([
     { 
       id: 1, 
-      name: 'Мощь: 3х30м', 
-      image: '📊', 
+      name: 'Таблица1', 
+      image: 'фото', // потом заменить на фотки
       createdBy: 'user1',
       isMyProject: true,
       columns: [
@@ -48,12 +51,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       data: [
         { id: 1, data: { '1': 1, '2': 'Проект А', '3': 'Активный' } },
         { id: 2, data: { '1': 2, '2': 'Проект Б', '3': 'Завершен' } },
-      ]
+      ],
+      disabledCells: new Set(),
+      disabledRows: new Set(),
+      disabledColumns: new Set()
     },
     { 
       id: 2, 
-      name: 'Мощь: 2х20м', 
-      image: '📊', 
+      name: 'Таблица2', 
+      image: 'фото', 
       createdBy: 'user2',
       isMyProject: false,
       columns: [
@@ -62,12 +68,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       ],
       data: [
         { id: 1, data: { '1': 1, '2': 'Задача 1' } },
-      ]
+      ],
+      disabledCells: new Set(),
+      disabledRows: new Set(),
+      disabledColumns: new Set()
     },
     { 
       id: 3, 
-      name: 'Мощь: 1х10м', 
-      image: '📊', 
+      name: 'Таблица3', 
+      image: 'фото', 
       createdBy: 'user1',
       isMyProject: true,
       columns: [
@@ -76,7 +85,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       ],
       data: [
         { id: 1, data: { '1': 1, '2': 'Описание 1' } },
-      ]
+      ],
+      disabledCells: new Set(),
+      disabledRows: new Set(),
+      disabledColumns: new Set()
     },
   ]);
 
@@ -86,6 +98,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const newTable: Table = {
       ...tableData,
       id: Date.now(),
+      disabledCells: tableData.disabledCells || new Set(),
+      disabledRows: tableData.disabledRows || new Set(),
+      disabledColumns: tableData.disabledColumns || new Set()
     };
     setAllTables(prev => [...prev, newTable]);
   };
@@ -96,7 +111,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateTable = (tableId: number, updates: Partial<Table>) => {
     setAllTables(prev => prev.map(table => 
-      table.id === tableId ? { ...table, ...updates } : table
+      table.id === tableId ? { 
+        ...table, 
+        ...updates,
+        disabledCells: updates.disabledCells || table.disabledCells || new Set(),
+        disabledRows: updates.disabledRows || table.disabledRows || new Set(),
+        disabledColumns: updates.disabledColumns || table.disabledColumns || new Set()
+      } : table
     ));
   };
 

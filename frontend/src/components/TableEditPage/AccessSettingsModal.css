@@ -1,0 +1,266 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 30px;
+  padding: 40px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  color: var(--accent-3);
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+}
+
+.modal-close-button:hover {
+  background-color: #f5f5f5;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+  margin-right: -10px;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--accent-5);
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-2);
+}
+
+.section-title {
+  color: var(--accent-4);
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.access-rules-section {
+  margin-bottom: 30px;
+}
+
+.access-rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.access-rule-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-radius: 20px;
+}
+
+.rule-name {
+  color: var(--accent-4);
+  font-size: 14px;
+}
+
+.checkbox-container {
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.checkmark {
+  position: relative;
+  height: 20px;
+  width: 20px;
+  background-color: #fff;
+  border: 2px solid var(--accent-5);
+  border-radius: 5px;
+  display: inline-block;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background-color: var(--accent-5);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox-container .checkmark:after {
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.editing-rights-section {
+  margin-bottom: 30px;
+}
+
+.search-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  border: 2px solid var(--accent-5);
+  border-radius: 30px;
+  padding: 12px 50px 12px 20px;
+  font-size: 14px;
+  width: 100%;
+  color: var(--accent-5);
+}
+
+.search-input::placeholder {
+  color: var(--accent-5);
+  opacity: 0.7;
+}
+
+.search-button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--accent-5);
+}
+
+.employees-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.employees-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.employees-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.employees-list::-webkit-scrollbar-thumb {
+  background: var(--accent-5);
+  border-radius: 3px;
+}
+
+.employee-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background-color: #f8f9fa;
+  border-radius: 15px;
+}
+
+.employee-name {
+  color: var(--accent-4);
+  font-size: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+  flex-shrink: 0;
+}
+
+.cancel-button {
+  background: none;
+  border: 2px solid var(--accent-5);
+  color: var(--accent-5);
+  padding: 12px 30px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.cancel-button:hover {
+  background-color: var(--accent-5);
+  color: white;
+}
+
+.save-settings-button {
+  background-color: var(--accent-3);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.save-settings-button:hover {
+  background-color: var(--accent-2);
+}

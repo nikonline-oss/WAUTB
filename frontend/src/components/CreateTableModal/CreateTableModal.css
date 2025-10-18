@@ -1,0 +1,226 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.create-modal {
+  background: white;
+  border-radius: 30px;
+  padding: 40px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  color: var(--accent-3);
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+  color: var(--accent-3);
+}
+
+.modal-close-button:hover {
+  background-color: #f5f5f5;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+  margin-right: -10px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.manual-config-section {
+  margin-bottom: 10px;
+}
+
+.section-title {
+  color: var(--accent-3);
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.parameters-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.parameter-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.parameter-name {
+  color: var(--accent-3);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.parameter-value {
+  border: 2px solid var(--accent-5);
+  border-radius: 20px;
+  padding: 8px 15px;
+  font-size: 14px;
+  color: var(--accent-5);
+  background: white;
+  min-width: 150px;
+}
+
+.parameter-value:focus {
+  outline: none;
+  border-color: var(--accent-3);
+}
+
+.use-template-btn {
+  background: none;
+  border: 2px solid var(--accent-3);
+  color: var(--accent-3);
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+  width: 100%;
+}
+
+.use-template-btn:hover {
+  background-color: var(--accent-3);
+  color: white;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 25px;
+  flex-shrink: 0;
+}
+
+.cancel-button {
+  background: none;
+  border: 2px solid var(--accent-5);
+  color: var(--accent-5);
+  padding: 12px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.cancel-button:hover {
+  background-color: var(--accent-5);
+  color: white;
+}
+
+.create-db-button {
+  background-color: var(--accent-3);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.create-db-button:hover {
+  background-color: var(--accent-2);
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--accent-5);
+  border-radius: 3px;
+}
+.table-name-section {
+  margin-bottom: 25px;
+}
+
+.table-name-section .section-title {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.table-name-input {
+  border: 2px solid var(--accent-5);
+  border-radius: 20px;
+  padding: 12px 20px;
+  font-size: 16px;
+  color: var(--accent-5);
+  background: white;
+  width: 100%;
+}
+
+.table-name-input:focus {
+  outline: none;
+  border-color: var(--accent-3);
+}
+
+.import-excel-btn-1 {
+  background: none;
+  border: 2px solid #28a745;
+  color: #28a745;
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.import-excel-btn-1:hover {
+  background-color: #28a745;
+  color: white;
+}

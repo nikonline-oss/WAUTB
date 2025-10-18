@@ -1,0 +1,116 @@
+.templates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.template-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.template-item:hover {
+  background-color: #e9ecef;
+  border-color: var(--accent-5);
+  transform: translateY(-2px);
+}
+
+.template-info {
+  flex: 1;
+}
+
+.template-name {
+  color: var(--accent-3);
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.template-description {
+  color: var(--accent-4);
+  font-size: 14px;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.template-category {
+  color: var(--accent-5);
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(64, 132, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 15px;
+  display: inline-block;
+}
+
+.select-template-btn {
+  background-color: var(--accent-3);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s;
+  flex-shrink: 0;
+  margin-left: 15px;
+}
+
+.select-template-btn:hover {
+  background-color: var(--accent-2);
+}
+
+.search-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  border: 2px solid var(--accent-5);
+  border-radius: 30px;
+  padding: 12px 50px 12px 20px;
+  font-size: 14px;
+  width: 100%;
+  color: var(--accent-5);
+}
+
+.search-input::placeholder {
+  color: var(--accent-5);
+  opacity: 0.7;
+}
+
+.search-button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--accent-5);
+}
+
+.templates-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.templates-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.templates-list::-webkit-scrollbar-thumb {
+  background: var(--accent-5);
+  border-radius: 3px;
+}

@@ -21,7 +21,7 @@
 
 .login-title {
   color: var(--accent-5);
-  font-size: 36px;
+  font-size: 68px;
   margin-bottom: 60px;
   font-weight: bold;
 }
@@ -31,6 +31,7 @@
   max-width: 400px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 40px;
 }
 
@@ -39,7 +40,7 @@
 }
 
 .login-button {
-  background-color: var(--accent-3);
+  background-color: var(--accent-2);
   color: white;
   border: none;
   padding: 18px;
@@ -48,8 +49,9 @@
   cursor: pointer;
   transition: background-color 0.3s;
   margin-top: 20px;
+  width: 80%;
 }
 
 .login-button:hover {
-  background-color: var(--accent-2);
+  background-color: var(--accent-3);
 }
