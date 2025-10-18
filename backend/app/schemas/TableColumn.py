@@ -10,11 +10,15 @@ class TableColumnBase(BaseModel):
     config: Dict[str, Any] = {}
 
 class TableColumnCreate(TableColumnBase):
+    table_template_id: int
+
+class TableColumnUpdate(TableColumnBase):
     pass
 
 class TableColumnResponse(TableColumnBase):
     id: int
+    table_template_id: int
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
