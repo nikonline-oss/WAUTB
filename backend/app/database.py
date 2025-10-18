@@ -5,7 +5,9 @@ from .core.config import settings
 
 
 
-engine = create_engine(settings.DATABASE_URL, echo=False, future=True)
+connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
+
+engine = create_engine(settings.DATABASE_URL, echo=False, future=True, connect_args=connect_args)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 Base = declarative_base()
 
@@ -20,4 +22,5 @@ def get_db():
 # Создание таблиц по моделям — будет вызвано при старте приложения
 def init_db():
     from . import models
-    Base.metadata.create_all(bind=engine)
+    # Base.metadata.drop_all(bind=engine)      # Удалить ВСЕ таблицы
+    Base.metadata.create_all(bind=engine)    # Создать ВСЕ таблицы заново

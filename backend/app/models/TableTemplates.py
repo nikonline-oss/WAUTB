@@ -19,6 +19,5 @@ class TableTemplate(Base):
     columns = relationship("TableColumn", back_populates="table_template", cascade="all, delete-orphan")
     records = relationship("TableRecord", back_populates="table_template")
 
-    creator = relationship("User", back_populates="created_templates")
     columns = relationship("TableColumn", back_populates="table_template", cascade="all, delete-orphan")
     records = relationship("TableRecord", back_populates="table_template", cascade="all, delete-orphan")

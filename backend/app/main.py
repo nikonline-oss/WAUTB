@@ -1,27 +1,18 @@
 from __future__ import annotations
-from fastapi import FastAPI, Request, Depends
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI
 from .database import init_db
 from .routes.user import router as user_router
-from .crud.user import user
-from .database import get_db
-from sqlalchemy.orm import Session
+from .routes.auth import router as auth_router
 
 app = FastAPI(title="Table Constructor API", version="1.0.0")
-db = get_db()
-# @app.include_router(user_router, prefix="/users")
+# print(user_router)
+app.include_router(user_router)
+app.include_router(auth_router)
 
 # Инициализация БД при старте
 @app.on_event("startup")
 def on_startup():
     init_db()
-
-
-@app.post("/create")
-def create_user(data_user: dict, db: Session = Depends(get_db)):
-    object = user.create(db, data_user)
-    return {"object": object}
 
 @app.get("/")
 def read_root():
