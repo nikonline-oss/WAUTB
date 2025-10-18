@@ -18,8 +18,8 @@ class CRUDBase:
     def get_multi(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[Any]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
-    def create(self, db: Session, *, obj_in: Dict) -> Any:
-        db_obj = self.model(**obj_in)
+    def create(self, db: Session, obj_in: Dict) -> Any:
+        db_obj = self.model(*obj_in)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
