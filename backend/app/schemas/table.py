@@ -13,6 +13,9 @@ class TableColumnBase(BaseModel):
 class TableColumnCreate(TableColumnBase):
     table_template_id: int
 
+class TableColumnCreateWithoutTemplate(TableColumnBase):
+    pass
+
 class TableColumnUpdate(BaseModel):
     name: Optional[str] = None
     data_type: Optional[str] = None
@@ -33,6 +36,9 @@ class TableTemplateBase(BaseModel):
 
 class TableTemplateCreate(TableTemplateBase):
     pass
+
+class TableTemplateCreateWithColumns(TableTemplateBase):
+    columns: List[TableColumnCreateWithoutTemplate] = []
 
 class TableTemplateUpdate(BaseModel):
     name: Optional[str] = None

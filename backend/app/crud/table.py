@@ -2,7 +2,7 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from ..models import TableTemplate, TableColumn, TableRecord
-from ..schemas.table import TableTemplateCreate, TableTemplateUpdate, TableColumnCreate, TableColumnUpdate, TableRecordCreate, TableRecordUpdate
+from ..schemas.table import TableTemplateCreate, TableTemplateUpdate, TableColumnCreate, TableColumnUpdate, TableRecordCreate, TableRecordUpdate,TableColumnCreateWithoutTemplate,TableTemplateCreateWithColumns
 
 class TableTemplateRepository:
     def get_by_id(self, db: Session, template_id: int) -> Optional[TableTemplate]:
@@ -14,6 +14,28 @@ class TableTemplateRepository:
     def create(self, db: Session, template_create: TableTemplateCreate) -> TableTemplate:
         db_template = TableTemplate(name=template_create.name)
         db.add(db_template)
+        db.commit()
+        db.refresh(db_template)
+        return db_template
+    
+    
+    def create_with_columns(self, db: Session, template_create: TableTemplateCreateWithColumns) -> TableTemplate:
+        db_template = TableTemplate(name=template_create.name)
+        db.add(db_template)
+        db.commit()
+        db.refresh(db_template)
+        
+        # Создаем колонки
+        for column_data in template_create.columns:
+            db_column = TableColumn(
+                table_template_id=db_template.id,
+                name=column_data.name,
+                data_type=column_data.data_type,
+                order_index=column_data.order_index,
+                config=column_data.config
+            )
+            db.add(db_column)
+        
         db.commit()
         db.refresh(db_template)
         return db_template
@@ -53,6 +75,7 @@ class TableColumnRepository:
         db.commit()
         db.refresh(db_column)
         return db_column
+    
     
     def update(self, db: Session, column_id: int, column_update: TableColumnUpdate) -> Optional[TableColumn]:
         db_column = self.get_by_id(db, column_id)

@@ -4,6 +4,7 @@ from datetime import timedelta
 from ..schemas import user as schemas
 from ..services.user_service import UserService, get_user_service
 from ..utils import create_access_token
+from ..core.config import settings
 
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
