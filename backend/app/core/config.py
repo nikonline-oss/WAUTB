@@ -27,8 +27,8 @@ class Settings:
     
     # Кодируем пароль для URL
     ENCODED_PASSWORD = quote_plus(POSTGRES_PASSWORD)
-    # DATABASE_URL = f"postgresql+psycopg2://{POSTGRES_USER}:{ENCODED_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
-    DATABASE_URL = "sqlite:///./test.db"
+    DATABASE_URL = f"postgresql+psycopg2://{POSTGRES_USER}:{ENCODED_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    # DATABASE_URL = "sqlite:///./test.db"
     
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here")
     ALGORITHM = "HS256"
