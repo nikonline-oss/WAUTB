@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from typing import List, Dict
 from .base import CRUDBase
 from models import TableColumn
-from ..schemas.TableColumn import TableColumnCreate, TableColumnUpdate
 
 class CRUDTableColumn(CRUDBase):
     def __init__(self):

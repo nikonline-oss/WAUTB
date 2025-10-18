@@ -1,13 +1,11 @@
 # crud/table_record.py
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_, func, cast,String, desc, asc
-from typing import List, Optional,Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 import json
 import math
 from .base import CRUDBase
 from models import TableRecord, TableColumn, TableTemplate
-from ..schemas.TableRecord import TableRecordCreate, TableRecordUpdate
-from ..schemas.paginate import PaginatedRequest, PaginatedResponse
 
 class CRUDTableRecord(CRUDBase):
     def __init__(self):
@@ -191,5 +189,43 @@ class CRUDTableRecord(CRUDBase):
             TableRecord.table_template_id == table_template_id,
             TableRecord.data[field].astext == str(value)
         ).all()
+
+    def import_from_excel(
+        self, 
+        db: Session, 
+        table_template_id: int,
+        file_content: bytes,
+        mapping: Optional[Dict[str, str]] = None
+    ) -> Tuple[int, List[Dict]]:
+        """Импорт записей из Excel файла"""
+        from services.excel_service import ExcelService
+        
+        try:
+            # Парсим Excel
+            df = ExcelService.parse_excel_file(file_content)
+            
+            # Получаем колонки шаблона
+            from crud.table_column import table_column as crud_column
+            table_columns = crud_column.get_by_template(db, table_template_id)
+            
+            # Автоматическое определение маппинга если не предоставлен
+            if not mapping:
+                mapping = ExcelService.auto_detect_mapping(df, table_columns)
+            
+            # Валидация данных
+            is_valid, errors = ExcelService.validate_data_with_schema(df, mapping, table_columns)
+            if not is_valid:
+                return 0, errors
+            
+            # Трансформация в записи
+            records_data = ExcelService.transform_to_records(df, mapping, table_columns)
+            
+            # Сохранение в БД
+            created_records = self.create_bulk(db, table_template_id, records_data)
+            
+            return len(created_records), []
+            
+        except Exception as e:
+            return 0, [{'type': 'import_error', 'message': str(e)}]
 
 table_record = CRUDTableRecord()

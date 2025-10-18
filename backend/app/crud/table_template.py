@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session, joinedload
 from typing import List , Optional , Dict
 from .base import CRUDBase
 from models import TableTemplate, TableColumn
-from ..schemas.TableTemplate import TableTemplateCreate, TableTemplateUpdate
 
 class CRUDTableTemplate(CRUDBase):
     def __init__(self):

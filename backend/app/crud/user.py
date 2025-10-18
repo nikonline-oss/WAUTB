@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from typing import Optional, Dict
 from .base import CRUDBase
 from models import User
-from ..schemas.User import UserCreate, UserUpdate
 from ..services.auth_service import get_password_hash, verify_password
 
 class CRUDUser(CRUDBase):
