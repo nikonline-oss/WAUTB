@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
+
+from ..schemas.permission import UserTablePermissionResponse
 from .department import DepartmentResponse
 
 class UserBase(BaseModel):
@@ -9,6 +11,7 @@ class UserBase(BaseModel):
     firstname: str
     middlename: str = ""
     department_id: int
+    role: str = "employee"
 
 class UserCreate(UserBase):
     password: str
@@ -20,6 +23,7 @@ class UserUpdate(BaseModel):
     middlename: Optional[str] = None
     department_id: Optional[int] = None
     password: Optional[str] = None
+    role: Optional[str] = None
 
 class UserResponse(UserBase):
     id: int
@@ -34,5 +38,7 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserWithPermissionsResponse(UserResponse):
+    permissions: List[UserTablePermissionResponse] = []
 
 UserResponse.model_rebuild()
