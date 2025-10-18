@@ -1,10 +1,25 @@
 from __future__ import annotations
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from .database import init_db
 from .routes import user_router, auth_router, department_router, table_router
 
 
 app = FastAPI(title="Table Constructor API", version="1.0.0")
+
+# Настройка CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",  # React dev server
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",  # Vite dev server
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],  # Разрешаем все методы, включая OPTIONS
+    allow_headers=["*"],  # Разрешаем все заголовки
+)
+
 app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(department_router)

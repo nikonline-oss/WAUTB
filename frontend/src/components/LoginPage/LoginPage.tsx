@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
+import { authService } from '../../store/loginService';
 
 const LoginPage: React.FC = () => {
-  const [login, setLogin] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Здесь будет логика авторизации
-    navigate('/main');
+    const data = await authService.login(email, password)
+    if (data.access_token) {
+      navigate('/main');
+    }
   };
 
   return (
@@ -20,10 +23,10 @@ const LoginPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="login-form">
           <div className="input-group">
             <input
-              type="text"
-              placeholder="Внутренний логин"
-              value={login}
-              onChange={(e) => setLogin(e.target.value)}
+              type="email"
+              placeholder="E-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="input-field"
               required
             />
