@@ -52,7 +52,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ onClose, onSelect }) => {
 
           <div key={"new-item"} className="template-item" onClick={onSelect}>
                 <div className="template-info">
-                  <h4 className="template-name">"Создать новый шаблон"</h4>
+                  <h4 className="template-name">Создать новый шаблон</h4>
                 </div>
                 <button className="select-template-btn">Выбрать</button>
               </div>
