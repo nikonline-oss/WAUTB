@@ -3,7 +3,7 @@ from typing import List
 
 from ..schemas import user as schemas
 from ..services.user_service import UserService, get_user_service
-from ..dependencies import get_current_active_user
+from ..dependencies import get_current_active_user, get_admin_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -16,7 +16,8 @@ router = APIRouter(prefix="/users", tags=["users"])
 )
 def create_user(
     user_data: schemas.UserCreate,
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
+    current_user = Depends(get_admin_user)
 ):
     """
     Создание пользователя:

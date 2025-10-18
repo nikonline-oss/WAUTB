@@ -42,7 +42,7 @@ class PermissionService:
             return permission.can_delete_rows
         elif permission_type == 'edit_structure':
             return permission.can_edit_structure
-        elif permission_type == 'can_add_table':
+        elif permission_type == 'add_table':
             return permission.can_add_table
         
         return False

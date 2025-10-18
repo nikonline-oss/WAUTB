@@ -3,6 +3,7 @@ from typing import List
 
 from ..schemas import table as schemas
 from ..services.table_service import TableTemplateService, TableColumnService, TableRecordService, get_table_template_service, get_table_column_service, get_table_record_service
+from ..dependencies import check_edit_structure_permission, get_admin_user, check_view_permission, get_current_user, check_add_rows_permission, check_edit_rows_permission,check_delete_rows_permission
 
 router = APIRouter(prefix="/tables", tags=["users"])
 
@@ -15,7 +16,8 @@ router = APIRouter(prefix="/tables", tags=["users"])
 )
 def create_table_template(
     table_data: schemas.TableTemplateCreateWithColumns,
-    table_service: TableTemplateService = Depends(get_table_template_service)
+    table_service: TableTemplateService = Depends(get_table_template_service),
+    current_user = Depends(get_admin_user) 
 ):
     return table_service.create_template_with_columns(table_data)
 
@@ -27,7 +29,9 @@ def create_table_template(
 )
 def get_table_template(
     table_id: int = Path(..., description="ID table", gt=0),
-    table_service: TableTemplateService = Depends(get_table_template_service)
+    table_service: TableTemplateService = Depends(get_table_template_service),
+    current_user = Depends(get_current_user),
+    _ = Depends(lambda: check_view_permission( Path(..., description="ID таблицы", gt=0))) 
 ):
     return table_service.get_template(table_id)
 
@@ -53,7 +57,8 @@ def get_table_templates(
 def update_table_template(
     table_id: int = Path(..., description="ID шаблона таблицы", gt=0),
     table_data: schemas.TableTemplateUpdate = None,
-    table_service: TableTemplateService = Depends(get_table_template_service)
+    table_service: TableTemplateService = Depends(get_table_template_service),
+    _ = Depends(lambda: check_edit_structure_permission( Path(..., description="ID таблицы", gt=0))) 
 ):
     return table_service.update_template(table_id, table_data)
 
@@ -65,7 +70,8 @@ def update_table_template(
 )
 def delete_table_template(
     table_id: int = Path(..., description="ID шаблона таблицы", gt=0),
-    table_service: TableTemplateService = Depends(get_table_template_service)
+    table_service: TableTemplateService = Depends(get_table_template_service),
+    _ = Depends(lambda: check_edit_structure_permission( Path(..., description="ID таблицы", gt=0))) 
 ):
     success = table_service.delete_template(table_id)
     if not success:
@@ -86,7 +92,8 @@ def delete_table_template(
 def create_table_column(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     column_data: schemas.TableColumnCreate = None,
-    column_service: TableColumnService = Depends(get_table_column_service)
+    column_service: TableColumnService = Depends(get_table_column_service),
+    _ = Depends(lambda: check_edit_structure_permission( Path(..., description="ID таблицы", gt=0))) 
 ):
     # Устанавливаем table_template_id из пути
     column_data.table_template_id = table_id
@@ -100,7 +107,8 @@ def create_table_column(
 )
 def get_table_columns(
     table_id: int = Path(..., description="ID таблицы", gt=0),
-    column_service: TableColumnService = Depends(get_table_column_service)
+    column_service: TableColumnService = Depends(get_table_column_service),
+    _ = Depends(lambda: check_view_permission( Path(..., description="ID таблицы", gt=0))) 
 ):
     return column_service.get_columns_by_template(table_id)
 
@@ -113,7 +121,8 @@ def get_table_columns(
 def update_table_column(
     column_id: int = Path(..., description="ID колонки", gt=0),
     column_data: schemas.TableColumnUpdate = None,
-    column_service: TableColumnService = Depends(get_table_column_service)
+    column_service: TableColumnService = Depends(get_table_column_service),
+    _ = Depends(lambda: check_edit_structure_permission( Path(..., description="ID таблицы", gt=0))) 
 ):
     return column_service.update_column(column_id, column_data)
 
@@ -125,7 +134,8 @@ def update_table_column(
 )
 def delete_table_column(
     column_id: int = Path(..., description="ID колонки", gt=0),
-    column_service: TableColumnService = Depends(get_table_column_service)
+    column_service: TableColumnService = Depends(get_table_column_service),
+    _ = Depends(lambda: check_edit_structure_permission( Path(..., description="ID таблицы", gt=0))) 
 ):
     success = column_service.delete_column(column_id)
     if not success:
@@ -147,7 +157,8 @@ def delete_table_column(
 def add_record(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     record_data: schemas.TableRecordCreate = None,
-    record_service: TableRecordService = Depends(get_table_record_service)
+    record_service: TableRecordService = Depends(get_table_record_service),
+    _ = Depends(lambda: check_add_rows_permission( Path(..., description="ID таблицы", gt=0))) 
 ):
     # Устанавливаем table_template_id из пути
     record_data.table_template_id = table_id
@@ -163,7 +174,8 @@ def get_records(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     skip: int = Query(0, ge=0, description="Количество записей для пропуска"),
     limit: int = Query(100, ge=1, le=1000, description="Лимит записей"),
-    record_service: TableRecordService = Depends(get_table_record_service)
+    record_service: TableRecordService = Depends(get_table_record_service),
+    current_user = Depends(get_admin_user) 
 ):
     return record_service.get_records_by_template(table_id, skip, limit)
 
@@ -197,7 +209,8 @@ def update_record(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     record_id: int = Path(..., description="ID записи", gt=0),
     record_data: schemas.TableRecordUpdate = None,
-    record_service: TableRecordService = Depends(get_table_record_service)
+    record_service: TableRecordService = Depends(get_table_record_service),
+    _ = Depends(lambda: check_edit_rows_permission( Path(..., description="ID таблицы", gt=0))) 
 ):
     # В сервисе нужно добавить метод update_record
     # Пока используем существующий, предполагая что record_id уникален
@@ -218,7 +231,8 @@ def update_record(
 def delete_record(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     record_id: int = Path(..., description="ID записи", gt=0),
-    record_service: TableRecordService = Depends(get_table_record_service)
+    record_service: TableRecordService = Depends(get_table_record_service),
+    _ = Depends(lambda: check_delete_rows_permission( Path(..., description="ID таблицы", gt=0))) 
 ):
     # Проверяем существование записи и принадлежность к таблице
     record = record_service.get_record(record_id)
