@@ -7,8 +7,9 @@ from ..dependencies import get_current_active_user
 from ..schemas import user as schemas
 from ..services.user_services import UserService, get_user_service
 from ..services.auth_service import create_access_token
+from ..core.config import settings
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
