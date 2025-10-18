@@ -28,13 +28,11 @@ class ExcelService:
             
         try:
             if data_type == 'text':
-                return str(value) if not pd.isna(value) else ""
+                return str(value)
             elif data_type == 'number':
-                # Пытаемся преобразовать в число
                 if isinstance(value, (int, float)):
                     return float(value)
                 elif isinstance(value, str):
-                    # Убираем пробелы и запятые (для тысяч)
                     cleaned = value.replace(' ', '').replace(',', '.')
                     return float(cleaned)
                 else:
@@ -52,7 +50,6 @@ class ExcelService:
                 if isinstance(value, datetime):
                     return value.strftime('%Y-%m-%d')
                 elif isinstance(value, str):
-                    # Пытаемся распарсить дату
                     for fmt in ['%Y-%m-%d', '%d.%m.%Y', '%d/%m/%Y', '%Y.%m.%d']:
                         try:
                             dt = datetime.strptime(value, fmt)
@@ -64,7 +61,6 @@ class ExcelService:
                 if isinstance(value, datetime):
                     return value.isoformat()
                 elif isinstance(value, str):
-                    # Пытаемся распарсить datetime
                     for fmt in ['%Y-%m-%d %H:%M:%S', '%d.%m.%Y %H:%M', '%Y-%m-%dT%H:%M:%S']:
                         try:
                             dt = datetime.strptime(value, fmt)
@@ -80,7 +76,6 @@ class ExcelService:
             print(f"Ошибка конвертации значения {value} в тип {data_type}: {e}")
             return str(value)
 
-
     @staticmethod
     def auto_detect_mapping(df: pd.DataFrame, table_columns: List) -> Dict[str, str]:
         """Автоматическое определение маппинга колонок по имени"""
@@ -92,7 +87,6 @@ class ExcelService:
         for col in table_columns:
             col_name_lower = col.name.lower()
             
-            # Ищем точное совпадение
             for excel_col in excel_columns:
                 excel_col_lower = str(excel_col).lower()
                 if col_name_lower == excel_col_lower and excel_col not in used_excel_columns:
@@ -115,7 +109,6 @@ class ExcelService:
                     
                 excel_col_lower = str(excel_col).lower()
                 
-                # Простой алгоритм схожести
                 if col_name_lower in excel_col_lower or excel_col_lower in col_name_lower:
                     score = len(set(col_name_lower) & set(excel_col_lower))
                     if score > best_score:
@@ -157,20 +150,10 @@ class ExcelService:
     
     @staticmethod
     def validate_data_with_schema(df: pd.DataFrame, mapping: Dict[str, str], table_columns: List) -> Tuple[bool, List[Dict]]:
-        """Валидация данных по схеме таблицы"""
+        """Упрощенная валидация данных по схеме таблицы (без обязательных полей)"""
         errors = []
-        required_columns = [col.name for col in table_columns if col.is_required]
         
-        # Проверяем обязательные колонки
-        for col_name in required_columns:
-            if col_name not in mapping:
-                errors.append({
-                    'type': 'missing_column',
-                    'message': f'Обязательная колонка "{col_name}" не найдена в файле',
-                    'column': col_name
-                })
-        
-        # Проверяем типы данных в первых 10 строках для примера
+        # Проверяем только типы данных в первых 10 строках для примера
         sample_size = min(10, len(df))
         for i in range(sample_size):
             for col in table_columns:
@@ -179,19 +162,12 @@ class ExcelService:
                     if excel_col in df.columns:
                         value = df.iloc[i][excel_col]
                         
-                        # Пропускаем пустые значения для необязательных полей
-                        if pd.isna(value) and not col.is_required:
+                        # Пропускаем пустые значения
+                        if pd.isna(value):
                             continue
                             
                         try:
-                            converted = ExcelService._convert_value(value, col.data_type)
-                            if converted is None and col.is_required:
-                                errors.append({
-                                    'type': 'required_field_empty',
-                                    'message': f'Строка {i+1}: обязательное поле "{col.name}" пустое',
-                                    'row': i + 1,
-                                    'column': col.name
-                                })
+                            ExcelService._convert_value(value, col.data_type)
                         except Exception as e:
                             errors.append({
                                 'type': 'type_conversion_error',
@@ -224,12 +200,6 @@ class ExcelService:
                     
                     # Конвертируем значение
                     converted_value = ExcelService._convert_value(value, data_type)
-                    
-                    # Для обязательных полей проверяем, что значение не None
-                    if col_info and col_info.is_required and converted_value is None:
-                        # Можно добавить логику обработки ошибок
-                        print(f"Предупреждение: строка {index+1}, колонка {column_name} - обязательное поле пустое")
-                    
                     record_data[column_name] = converted_value
             
             # Добавляем только если есть хотя бы одно непустое поле
@@ -241,7 +211,6 @@ class ExcelService:
     @staticmethod
     def create_table_from_excel(df: pd.DataFrame, table_name: str) -> Tuple[Dict, List[Dict]]:
         """Создает структуру таблицы и данные из Excel файла"""
-        # Автоматически определяем типы данных для колонок
         columns = []
         for col_name in df.columns:
             col_data = df[col_name]
@@ -249,14 +218,11 @@ class ExcelService:
             # Определяем тип данных на основе первых непустых значений
             data_type = 'text'  # по умолчанию
             
-            # Пробуем определить числовой тип
             numeric_values = pd.to_numeric(col_data, errors='coerce')
-            if numeric_values.notna().sum() > len(col_data) * 0.8:  # 80% значений числовые
+            if numeric_values.notna().sum() > len(col_data) * 0.8:
                 data_type = 'number'
-            # Пробуем определить дату
             elif pd.to_datetime(col_data, errors='coerce').notna().sum() > len(col_data) * 0.8:
                 data_type = 'datetime'
-            # Пробуем определить булево
             elif col_data.dropna().apply(lambda x: str(x).lower() in ['true', 'false', '0', '1', 'да', 'нет']).all():
                 data_type = 'boolean'
             
@@ -285,3 +251,62 @@ class ExcelService:
         }
         
         return table_template, records_data
+
+    @staticmethod
+    def process_excel_import(
+        file_content: bytes,
+        mapping: Dict[str, str],
+        table_columns: List,
+        skip_first_rows: int = 0
+    ) -> Tuple[int, List[Dict[str, Any]]]:
+        """Основной метод для импорта данных из Excel"""
+        try:
+            # Парсим Excel
+            df = ExcelService.parse_excel_file(file_content)
+            
+            # Пропускаем указанное количество строк
+            if skip_first_rows > 0:
+                df = df.iloc[skip_first_rows:].reset_index(drop=True)
+            
+            # Валидируем данные
+            is_valid, errors = ExcelService.validate_data_with_schema(df, mapping, table_columns)
+            if not is_valid:
+                return 0, errors
+            
+            # Трансформируем в записи
+            records = ExcelService.transform_to_records(df, mapping, table_columns)
+            
+            return len(records), []
+            
+        except Exception as e:
+            return 0, [{'type': 'processing_error', 'message': str(e)}]
+
+    @staticmethod
+    def get_excel_preview(
+        file_content: bytes, 
+        table_columns: List,
+        skip_first_rows: int = 0
+    ) -> Dict[str, Any]:
+        """Получение превью Excel файла и предложенного маппинга"""
+        try:
+            df = ExcelService.parse_excel_file(file_content)
+            
+            # Пропускаем строки если нужно
+            if skip_first_rows > 0:
+                df = df.iloc[skip_first_rows:].reset_index(drop=True)
+            
+            # Автоматический маппинг
+            suggested_mapping = ExcelService.auto_detect_mapping(df, table_columns)
+            
+            # Превью данных
+            preview_data = ExcelService.get_preview_data(df)
+            
+            return {
+                'columns': df.columns.tolist(),
+                'preview_data': preview_data,
+                'suggested_mapping': suggested_mapping,
+                'table_columns': [{'name': col.name, 'data_type': col.data_type} for col in table_columns]
+            }
+            
+        except Exception as e:
+            raise ValueError(f"Ошибка при обработке Excel файла: {str(e)}")

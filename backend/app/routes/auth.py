@@ -5,7 +5,7 @@ from ..schemas import user as schemas
 from ..services.user_service import UserService, get_user_service
 from ..utils import create_access_token
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(tags=["authentication"])
 
