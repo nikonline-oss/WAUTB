@@ -9,7 +9,7 @@ class Settings:
     PROJECT_VERSION: str = "1.0.0"
     
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "123456")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "Post0Nik1line")
     POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER", "localhost")
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "table_constructor")
