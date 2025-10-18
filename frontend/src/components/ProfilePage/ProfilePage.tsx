@@ -16,7 +16,7 @@ const ProfilePage: React.FC = () => {
               <img src={testPersonImage} alt="Profile" className="avatar-image" />
             </div>
             <div className="profile-info">
-              <h1 className="profile-name">Барумов Михаил Иванович</h1>
+              <h1 className="profile-name">Белый Михаил Иванович</h1>
               <p className="profile-position">
                 Руководитель сервис-сервис жидкого полирования и инноватора
               </p>

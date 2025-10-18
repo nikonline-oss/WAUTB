@@ -20,6 +20,8 @@ const MainPage: React.FC = () => {
   const { tables, deleteTable, addTable } = useApp();
   const { showAlert } = useAlert();
 
+  
+
   const handleMenuToggle = (tableId: number, event: React.MouseEvent) => {
     event.stopPropagation();
     setActiveMenu(activeMenu === tableId ? null : tableId);

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { apiClient } from '../store/client';
 
 export interface Table {
   id: number;
@@ -36,6 +37,9 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  
+  
+
   const [allTables, setAllTables] = useState<Table[]>([
     { 
       id: 1, 
