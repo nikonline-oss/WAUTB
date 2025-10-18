@@ -1,7 +1,7 @@
 # crud/table_record.py
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
-from typing import List, Optional
+from typing import List, Optional,DI
 import json
 
 from .base import CRUDBase
@@ -9,115 +9,187 @@ from models import TableRecord, TableColumn
 from ..schemas.TableRecord import TableRecordCreate, TableRecordUpdate
 from ..schemas.paginate import PaginatedRequest, PaginatedResponse
 
-class CRUDTableRecord(CRUDBase[TableRecord, TableRecordCreate, TableRecordUpdate]):
-    def get_by_template(
-        self, db: Session, table_template_id: int, *, skip: int = 0, limit: int = 100
-    ) -> List[TableRecord]:
-        return (
-            db.query(TableRecord)
-            .filter(TableRecord.table_template_id == table_template_id)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+class CRUDTableRecord(CRUDBase):
+    def __init__(self):
+        super().__init__(TableRecord)
 
-    def get_paginated(
-        self, db: Session, table_template_id: int, request: PaginatedRequest
-    ) -> PaginatedResponse:
-        query = db.query(TableRecord).filter(TableRecord.table_template_id == table_template_id)
+    def _build_filters(self, query, filters: List[Dict]):
+        """Строит фильтры для JSONB поля data"""
+        if not filters:
+            return query
 
-        # Apply filters
-        query = self._apply_filters(query, request.filters)
-        
-        # Apply search
-        if request.search:
-            query = self._apply_search(query, request.search)
-        
-        # Get total count before pagination
-        total = query.count()
-        
-        # Apply sorting
-        query = self._apply_sorting(query, request.sort)
-        
-        # Apply pagination
-        items = query.offset((request.page - 1) * request.per_page).limit(request.per_page).all()
-        
-        total_pages = (total + request.per_page - 1) // request.per_page
-        
-        return PaginatedResponse(
-            items=items,
-            total=total,
-            page=request.page,
-            per_page=request.per_page,
-            total_pages=total_pages
-        )
+        conditions = []
+        for filter_item in filters:
+            field = filter_item.get('field')
+            operator = filter_item.get('operator', '=')
+            value = filter_item.get('value')
 
-    def _apply_filters(self, query, filters):
-        for filter_cond in filters:
-            field = filter_cond.field
-            operator = filter_cond.operator
-            value = filter_cond.value
-            
-            # Handle JSON field filtering
+            if not field:
+                continue
+
             json_field = TableRecord.data[field]
-            
-            if operator == 'eq':
-                query = query.filter(json_field.astext == str(value))
-            elif operator == 'ne':
-                query = query.filter(json_field.astext != str(value))
-            elif operator == 'gt':
-                query = query.filter(json_field.astext > str(value))
-            elif operator == 'lt':
-                query = query.filter(json_field.astext < str(value))
-            elif operator == 'gte':
-                query = query.filter(json_field.astext >= str(value))
-            elif operator == 'lte':
-                query = query.filter(json_field.astext <= str(value))
-            elif operator == 'like':
-                query = query.filter(json_field.astext.ilike(f"%{value}%"))
-            elif operator == 'in':
-                if isinstance(value, list):
-                    query = query.filter(json_field.astext.in_([str(v) for v in value]))
+
+            if operator == '=':
+                conditions.append(json_field.astext == str(value))
+            elif operator == '!=':
+                conditions.append(json_field.astext != str(value))
+            elif operator == '>':
+                conditions.append(cast(json_field.astext, String) > str(value))
+            elif operator == '<':
+                conditions.append(cast(json_field.astext, String) < str(value))
+            elif operator == '>=':
+                conditions.append(cast(json_field.astext, String) >= str(value))
+            elif operator == '<=':
+                conditions.append(cast(json_field.astext, String) <= str(value))
             elif operator == 'contains':
-                query = query.filter(json_field.contains(value))
+                conditions.append(json_field.astext.ilike(f'%{value}%'))
+            elif operator == 'in' and isinstance(value, list):
+                conditions.append(json_field.astext.in_([str(v) for v in value]))
+            elif operator == 'not_in' and isinstance(value, list):
+                conditions.append(~json_field.astext.in_([str(v) for v in value]))
+
+        if conditions:
+            query = query.filter(and_(*conditions))
         
         return query
 
-    def _apply_search(self, query, search_text: str):
+    def _build_search(self, query, search_text: str, searchable_columns: List[str] = None):
+        """Глобальный поиск по всем текстовым полям"""
+        if not search_text:
+            return query
+
         search_conditions = []
-        
-        search_conditions.append(
-            TableRecord.data.cast(str).ilike(f"%{search_text}%")
-        )
-        
+        search_pattern = f'%{search_text}%'
+
+        # Если указаны конкретные колонки для поиска
+        if searchable_columns:
+            for column in searchable_columns:
+                search_conditions.append(TableRecord.data[column].astext.ilike(search_pattern))
+        else:
+            # Ищем по всем текстовым полям в JSONB
+            search_conditions.append(cast(TableRecord.data, String).ilike(search_pattern))
+
         return query.filter(or_(*search_conditions))
 
-    def _apply_sorting(self, query, sort_conditions):
-        if not sort_conditions:
-            return query.order_by(TableRecord.updated_at.desc())
-        
-        for sort_cond in sort_conditions:
-            field = sort_cond.field
-            direction = sort_cond.direction
-            
-            if hasattr(TableRecord, field):
-                column = getattr(TableRecord, field)
-            else:
-                column = TableRecord.data[field].astext
-            
-            if direction == 'desc':
-                query = query.order_by(column.desc())
-            else:
-                query = query.order_by(column.asc())
-        
-        return query
+    def _build_sort(self, query, sort_by: str, sort_order: str = 'asc'):
+        """Сортировка по полям JSONB или стандартным полям"""
+        if not sort_by:
+            return query.order_by(TableRecord.id.desc())
 
-    def create(self, db: Session, *, obj_in: TableRecordCreate) -> TableRecord:
-        obj_in_data = obj_in.dict()
-        db_obj = TableRecord(**obj_in_data)
-        db.add(db_obj)
+        # Сортировка по стандартным полям
+        if hasattr(TableRecord, sort_by):
+            field = getattr(TableRecord, sort_by)
+            if sort_order.lower() == 'desc':
+                return query.order_by(desc(field))
+            else:
+                return query.order_by(asc(field))
+        
+        # Сортировка по JSONB полям
+        json_field = TableRecord.data[sort_by]
+        if sort_order.lower() == 'desc':
+            return query.order_by(desc(cast(json_field.astext, String)))
+        else:
+            return query.order_by(asc(cast(json_field.astext, String)))
+
+    def get_records_with_pagination(
+        self, 
+        db: Session, 
+        table_template_id: int,
+        *,
+        page: int = 1,
+        per_page: int = 50,
+        search_text: str = None,
+        filters: List[Dict] = None,
+        sort_by: str = None,
+        sort_order: str = 'asc',
+        include_template: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Сложная пагинация с фильтрацией, поиском и сортировкой
+        Возвращает: {
+            'records': List[TableRecord],
+            'total': int,
+            'page': int,
+            'per_page': int,
+            'total_pages': int
+        }
+        """
+        # Базовый запрос
+        query = db.query(TableRecord).filter(
+            TableRecord.table_template_id == table_template_id
+        )
+
+        # Применяем поиск
+        if search_text:
+            query = self._build_search(query, search_text)
+
+        # Применяем фильтры
+        if filters:
+            query = self._build_filters(query, filters)
+
+        # Получаем общее количество для пагинации
+        total = query.count()
+
+        # Применяем сортировку
+        query = self._build_sort(query, sort_by, sort_order)
+
+        # Применяем пагинацию
+        records = query.offset((page - 1) * per_page).limit(per_page).all()
+
+        # Включаем информацию о шаблоне если нужно
+        if include_template and records:
+            template = db.query(TableTemplate).options(
+                joinedload(TableTemplate.columns)
+            ).filter(TableTemplate.id == table_template_id).first()
+        else:
+            template = None
+
+        total_pages = math.ceil(total / per_page) if total > 0 else 1
+
+        return {
+            'records': records,
+            'template': template,
+            'pagination': {
+                'total': total,
+                'page': page,
+                'per_page': per_page,
+                'total_pages': total_pages,
+                'has_next': page < total_pages,
+                'has_prev': page > 1
+            }
+        }
+
+    def create_bulk(self, db: Session, table_template_id: int, records_data: List[Dict]) -> List[TableRecord]:
+        """Массовое создание записей"""
+        records = []
+        for record_data in records_data:
+            db_record = TableRecord(
+                table_template_id=table_template_id,
+                data=record_data.get('data', {})
+            )
+            db.add(db_record)
+            records.append(db_record)
+        
         db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        for record in records:
+            db.refresh(record)
+        
+        return records
 
-table_record = CRUDTableRecord(TableRecord)
+    def update_data(self, db: Session, *, record_id: int, data: Dict) -> Optional[TableRecord]:
+        """Обновляет только data поле записи"""
+        record = self.get(db, record_id)
+        if record:
+            record.data = data
+            db.commit()
+            db.refresh(record)
+        return record
+
+    def get_by_data_field(self, db: Session, table_template_id: int, field: str, value: Any) -> List[TableRecord]:
+        """Поиск записей по конкретному полю в data"""
+        return db.query(TableRecord).filter(
+            TableRecord.table_template_id == table_template_id,
+            TableRecord.data[field].astext == str(value)
+        ).all()
+
+table_record = CRUDTableRecord()
