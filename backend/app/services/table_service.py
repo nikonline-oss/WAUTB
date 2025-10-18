@@ -15,6 +15,10 @@ class TableTemplateService:
         db_template = table_template_repository.create(self.db, template_data)
         return schemas.TableTemplateResponse.model_validate(db_template)
     
+    def create_template_with_columns(self, template_data: schemas.TableTemplateCreateWithColumns) -> schemas.TableTemplateResponse:
+        db_template = table_template_repository.create_with_columns(self.db, template_data)
+        return schemas.TableTemplateResponse.model_validate(db_template)
+
     def get_template(self, template_id: int) -> schemas.TableTemplateResponse:
         db_template = table_template_repository.get_by_id(self.db, template_id)
         if not db_template:
