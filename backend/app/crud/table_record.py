@@ -1,11 +1,11 @@
 # crud/table_record.py
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func
-from typing import List, Optional,DI
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import and_, or_, func, cast,String, desc, asc
+from typing import List, Optional,Dict, Any
 import json
-
+import math
 from .base import CRUDBase
-from models import TableRecord, TableColumn
+from models import TableRecord, TableColumn, TableTemplate
 from ..schemas.TableRecord import TableRecordCreate, TableRecordUpdate
 from ..schemas.paginate import PaginatedRequest, PaginatedResponse
 

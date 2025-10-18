@@ -1,6 +1,6 @@
 # crud/user.py
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, Dict
 from .base import CRUDBase
 from models import User
 from ..schemas.User import UserCreate, UserUpdate

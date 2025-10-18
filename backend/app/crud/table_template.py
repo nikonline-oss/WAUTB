@@ -26,7 +26,7 @@ class CRUDTableTemplate(CRUDBase):
         # Создаем шаблон таблицы
         db_template = TableTemplate(**template_data)
         db.add(db_template)
-        db.flush()  # Получаем ID для связей
+        db.flush()
 
         # Создаем колонки
         for col_data in columns:
