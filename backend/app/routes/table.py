@@ -45,7 +45,7 @@ def get_table_templates(
     return table_service.get_templates(skip, limit)
 
 @router.put(
-    "/{table_id}", 
+    "/{table_id}/template", 
     response_model=schemas.TableTemplateResponse,
     summary="Обновить шаблон таблицы",
     description="Обновление информации о таблице"
@@ -56,3 +56,25 @@ def update_table_template(
     table_service: TableTemplateService = Depends(get_table_template_service)
 ):
     return table_service.update_template(table_id, table_data)
+
+
+@router.post(
+    "/{table_id}",
+    response_model=schemas.TableRecordResponse
+)
+def add_record(
+    table_id: int = Path(..., gt=0),
+    record_data: schemas.TableRecordCreate = None,
+    table_service: TableRecordService = Depends(get_table_record_service)
+):
+    return table_service.create_record(record_data)
+
+@router.get(
+    "/{table_id}",
+    response_model=List[schemas.TableRecordResponse]
+)
+def get_records(
+    table_id: int = Path(..., gt=0),
+    table_service: TableRecordService = Depends(get_table_record_service)
+):
+    table_service.get_records_by_template(table_id)
