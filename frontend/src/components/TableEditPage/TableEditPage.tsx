@@ -345,6 +345,11 @@ const TableEditPage: React.FC = () => {
             )}
           </div>
           <div className="breadcrumb-right">
+            <button
+              className={`mode-btn ${viewMode === 'view' ? 'active' : ''}`}
+            >
+              Журнал изменений
+            </button>
             <div className="view-mode-toggle">
               <button
                 className={`mode-btn ${viewMode === 'view' ? 'active' : ''}`}
@@ -381,7 +386,7 @@ const TableEditPage: React.FC = () => {
                 className="import-excel-btn"
                 onClick={() => console.log('Импорт из Excel')}
               >
-              Импорт из Excel
+                Импорт из Excel
               </button>
               <div className="drag-hint">
                 Перетаскивайте заголовки столбцов и строк для изменения порядка
