@@ -8,6 +8,8 @@ from .schemas import user as schemas
 from .database import get_db
 from .crud.user import user_repository as user_repo
 from .core.config import settings
+from .services.permission_service import PermissionService, get_permission_service
+
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 
@@ -49,4 +51,49 @@ async def get_admin_user(current_user: schemas.UserResponse = Depends(get_curren
     #         status_code=status.HTTP_403_FORBIDDEN,
     #         detail="Недостаточно прав"
     #     )
+    return current_user
+
+async def check_table_permission(
+    table_template_id: int,
+    permission_type: str,
+    current_user = Depends(get_current_user),
+    permission_service: PermissionService = Depends(get_permission_service)
+):
+    """Зависимость для проверки прав доступа к таблице"""
+    has_permission = permission_service.check_permission(
+        current_user.id, table_template_id, permission_type
+    )
+    
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав для выполнения операции"
+        )
+    
+    return current_user
+
+# Конкретные зависимости для разных типов прав
+async def check_view_permission(table_template_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await check_table_permission(table_template_id, 'view', current_user, db)
+
+async def check_add_rows_permission(table_template_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await check_table_permission(table_template_id, 'add_rows', current_user, db)
+
+async def check_edit_rows_permission(table_template_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await check_table_permission(table_template_id, 'edit_rows', current_user, db)
+
+async def check_delete_rows_permission(table_template_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await check_table_permission(table_template_id, 'delete_rows', current_user, db)
+
+async def check_edit_structure_permission(table_template_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await check_table_permission(table_template_id, 'edit_structure', current_user, db)
+
+# Зависимость для проверки админских прав
+async def get_admin_user(current_user = Depends(get_current_user)):
+    """Проверка прав администратора"""
+    if current_user.role != 'admin':
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав. Требуются права администратора"
+        )
     return current_user

@@ -11,6 +11,7 @@ class UserTablePermissionBase(BaseModel):
     can_edit_rows: bool = False
     can_delete_rows: bool = False
     can_edit_structure: bool = False
+    can_add_table: bool = False
 
 class UserTablePermissionCreate(UserTablePermissionBase):
     pass
@@ -21,6 +22,7 @@ class UserTablePermissionUpdate(BaseModel):
     can_edit_rows: Optional[bool] = None
     can_delete_rows: Optional[bool] = None
     can_edit_structure: Optional[bool] = None
+    can_add_table: Optional[bool] = None
 
 class UserTablePermissionResponse(UserTablePermissionBase):
     id: int
@@ -42,7 +44,7 @@ class UserWithPermissions(BaseModel):
     lastname: str
     firstname: str
     middlename: str
-    department: str
+    department_id: int
     role: str
     permissions: List[UserTablePermissionResponse] = []
 
