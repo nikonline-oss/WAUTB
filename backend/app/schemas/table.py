@@ -32,7 +32,7 @@ class TableTemplateBase(BaseModel):
     name: str
 
 class TableTemplateCreate(TableTemplateBase):
-    pass
+    columns: List[TableColumnResponse] = []
 
 class TableTemplateUpdate(BaseModel):
     name: Optional[str] = None
@@ -42,7 +42,6 @@ class TableTemplateResponse(TableTemplateBase):
     created_at: datetime
     updated_at: datetime
     columns: List[TableColumnResponse] = []
-
     class Config:
         from_attributes = True
 
