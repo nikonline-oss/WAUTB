@@ -1,20 +1,30 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
 from typing import List
 
+from requests import Session
+
+from ..database import get_db
+from ..services.permission_service import PermissionService
+
 from ..schemas import table as schemas
 from ..services.table_service import TableTemplateService, TableColumnService, TableRecordService, get_table_template_service, get_table_column_service, get_table_record_service
-from ..dependencies import check_edit_structure_permission, get_admin_user, check_view_permission, get_current_user, check_add_rows_permission, check_edit_rows_permission,check_delete_rows_permission
+from ..dependencies import (
+    get_current_user, get_admin_user, check_view_permission, 
+    check_add_rows_permission, check_edit_rows_permission, 
+    check_delete_rows_permission, check_edit_structure_permission
+)
 
-router = APIRouter(prefix="/tables", tags=["users"])
+router = APIRouter(prefix="/tables", tags=["tables"])  # Исправил на "tables"
 
+# TableTemplate endpoints
 @router.post(
     "/", 
     response_model=schemas.TableTemplateResponse, 
     status_code=status.HTTP_201_CREATED,
     summary="Создать таблицу",
-    description="Создание новую таблицу в системе"
+    description="Создание новой таблицы в системе"
 )
-def create_table_template(
+async def create_table_template(
     table_data: schemas.TableTemplateCreateWithColumns,
     table_service: TableTemplateService = Depends(get_table_template_service),
     current_user = Depends(get_admin_user) 
@@ -27,11 +37,11 @@ def create_table_template(
     summary="Получить таблицу по ID",
     description="Получение информации о таблице по его идентификатору"
 )
-def get_table_template(
-    table_id: int = Path(..., description="ID table", gt=0),
+async def get_table_template(
+    table_id: int = Path(..., description="ID таблицы", gt=0),
     table_service: TableTemplateService = Depends(get_table_template_service),
     current_user = Depends(get_current_user),
-    _ = Depends(lambda: check_view_permission( Path(..., description="ID таблицы", gt=0))) 
+    _ = Depends(check_view_permission)  # Убрал lambda, передаем саму функцию
 ):
     return table_service.get_template(table_id)
 
@@ -41,10 +51,11 @@ def get_table_template(
     summary="Список шаблонов таблиц",
     description="Получение списка шаблонов таблиц с пагинацией"
 )
-def get_table_templates(
+async def get_table_templates(
     skip: int = Query(0, ge=0, description="Количество записей для пропуска"),
     limit: int = Query(100, ge=1, le=1000, description="Лимит записей"),
     table_service: TableTemplateService = Depends(get_table_template_service),
+    current_user = Depends(get_current_user)
 ):
     return table_service.get_templates(skip, limit)
 
@@ -54,11 +65,12 @@ def get_table_templates(
     summary="Обновить шаблон таблицы",
     description="Обновление информации о таблице"
 )
-def update_table_template(
+async def update_table_template(
     table_id: int = Path(..., description="ID шаблона таблицы", gt=0),
     table_data: schemas.TableTemplateUpdate = None,
     table_service: TableTemplateService = Depends(get_table_template_service),
-    _ = Depends(lambda: check_edit_structure_permission( Path(..., description="ID таблицы", gt=0))) 
+    current_user = Depends(get_current_user),
+    _ = Depends(check_edit_structure_permission)
 ):
     return table_service.update_template(table_id, table_data)
 
@@ -68,10 +80,11 @@ def update_table_template(
     summary="Удалить шаблон таблицы",
     description="Удаление шаблона таблицы и всех связанных данных"
 )
-def delete_table_template(
+async def delete_table_template(
     table_id: int = Path(..., description="ID шаблона таблицы", gt=0),
     table_service: TableTemplateService = Depends(get_table_template_service),
-    _ = Depends(lambda: check_edit_structure_permission( Path(..., description="ID таблицы", gt=0))) 
+    current_user = Depends(get_current_user),
+    _ = Depends(check_edit_structure_permission)
 ):
     success = table_service.delete_template(table_id)
     if not success:
@@ -89,11 +102,12 @@ def delete_table_template(
     summary="Добавить колонку в таблицу",
     description="Добавление новой колонки в шаблон таблицы"
 )
-def create_table_column(
+async def create_table_column(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     column_data: schemas.TableColumnCreate = None,
     column_service: TableColumnService = Depends(get_table_column_service),
-    _ = Depends(lambda: check_edit_structure_permission( Path(..., description="ID таблицы", gt=0))) 
+    current_user = Depends(get_current_user),
+    _ = Depends(check_edit_structure_permission)
 ):
     # Устанавливаем table_template_id из пути
     column_data.table_template_id = table_id
@@ -105,10 +119,11 @@ def create_table_column(
     summary="Получить колонки таблицы",
     description="Получение списка всех колонок таблицы"
 )
-def get_table_columns(
+async def get_table_columns(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     column_service: TableColumnService = Depends(get_table_column_service),
-    _ = Depends(lambda: check_view_permission( Path(..., description="ID таблицы", gt=0))) 
+    current_user = Depends(get_current_user),
+    _ = Depends(check_view_permission)
 ):
     return column_service.get_columns_by_template(table_id)
 
@@ -118,12 +133,33 @@ def get_table_columns(
     summary="Обновить колонку",
     description="Обновление информации о колонке таблицы"
 )
-def update_table_column(
+async def update_table_column(
     column_id: int = Path(..., description="ID колонки", gt=0),
     column_data: schemas.TableColumnUpdate = None,
     column_service: TableColumnService = Depends(get_table_column_service),
-    _ = Depends(lambda: check_edit_structure_permission( Path(..., description="ID таблицы", gt=0))) 
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)  # Нужно добавить импорт Session
 ):
+    # Сначала получаем колонку чтобы узнать table_template_id
+    column = column_service.get_column(column_id)
+    if not column:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Колонка не найдена"
+        )
+    
+    # Проверяем права на изменение структуры
+    permission_service = PermissionService(db)
+    has_permission = await permission_service.check_permission(
+        current_user.id, column.table_template_id, "edit_structure"
+    )
+    
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав для изменения структуры таблицы"
+        )
+    
     return column_service.update_column(column_id, column_data)
 
 @router.delete(
@@ -132,11 +168,32 @@ def update_table_column(
     summary="Удалить колонку",
     description="Удаление колонки из шаблона таблицы"
 )
-def delete_table_column(
+async def delete_table_column(
     column_id: int = Path(..., description="ID колонки", gt=0),
     column_service: TableColumnService = Depends(get_table_column_service),
-    _ = Depends(lambda: check_edit_structure_permission( Path(..., description="ID таблицы", gt=0))) 
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
+    # Сначала получаем колонку чтобы узнать table_template_id
+    column = column_service.get_column(column_id)
+    if not column:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Колонка не найдена"
+        )
+    
+    # Проверяем права на изменение структуры
+    permission_service = PermissionService(db)
+    has_permission = await permission_service.check_permission(
+        current_user.id, column.table_template_id, "edit_structure"
+    )
+    
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав для изменения структуры таблицы"
+        )
+    
     success = column_service.delete_column(column_id)
     if not success:
         raise HTTPException(
@@ -144,7 +201,6 @@ def delete_table_column(
             detail="Колонка не найдена"
         )
     return {"message": "Колонка успешно удалена"}
-
 
 # TableRecord endpoints
 @router.post(
@@ -154,11 +210,12 @@ def delete_table_column(
     summary="Добавить запись в таблицу",
     description="Добавление новой записи в таблицу"
 )
-def add_record(
+async def add_record(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     record_data: schemas.TableRecordCreate = None,
     record_service: TableRecordService = Depends(get_table_record_service),
-    _ = Depends(lambda: check_add_rows_permission( Path(..., description="ID таблицы", gt=0))) 
+    current_user = Depends(get_current_user),
+    _ = Depends(check_add_rows_permission)
 ):
     # Устанавливаем table_template_id из пути
     record_data.table_template_id = table_id
@@ -170,12 +227,13 @@ def add_record(
     summary="Получить записи таблицы",
     description="Получение списка записей таблицы с пагинацией"
 )
-def get_records(
+async def get_records(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     skip: int = Query(0, ge=0, description="Количество записей для пропуска"),
     limit: int = Query(100, ge=1, le=1000, description="Лимит записей"),
     record_service: TableRecordService = Depends(get_table_record_service),
-    current_user = Depends(get_admin_user) 
+    current_user = Depends(get_current_user),
+    _ = Depends(check_view_permission)
 ):
     return record_service.get_records_by_template(table_id, skip, limit)
 
@@ -185,12 +243,13 @@ def get_records(
     summary="Получить запись по ID",
     description="Получение конкретной записи таблицы по идентификатору"
 )
-def get_record(
+async def get_record(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     record_id: int = Path(..., description="ID записи", gt=0),
-    record_service: TableRecordService = Depends(get_table_record_service)
+    record_service: TableRecordService = Depends(get_table_record_service),
+    current_user = Depends(get_current_user),
+    _ = Depends(check_view_permission)
 ):
-    print(record_id)
     record = record_service.get_record(record_id)
     if not record or record.table_template_id != table_id:
         raise HTTPException(
@@ -205,15 +264,14 @@ def get_record(
     summary="Обновить запись",
     description="Обновление данных записи в таблице"
 )
-def update_record(
+async def update_record(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     record_id: int = Path(..., description="ID записи", gt=0),
     record_data: schemas.TableRecordUpdate = None,
     record_service: TableRecordService = Depends(get_table_record_service),
-    _ = Depends(lambda: check_edit_rows_permission( Path(..., description="ID таблицы", gt=0))) 
+    current_user = Depends(get_current_user),
+    _ = Depends(check_edit_rows_permission)
 ):
-    # В сервисе нужно добавить метод update_record
-    # Пока используем существующий, предполагая что record_id уникален
     record = record_service.update_record(record_id, record_data)
     if not record or record.table_template_id != table_id:
         raise HTTPException(
@@ -228,11 +286,12 @@ def update_record(
     summary="Удалить запись",
     description="Удаление записи из таблицы"
 )
-def delete_record(
+async def delete_record(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     record_id: int = Path(..., description="ID записи", gt=0),
     record_service: TableRecordService = Depends(get_table_record_service),
-    _ = Depends(lambda: check_delete_rows_permission( Path(..., description="ID таблицы", gt=0))) 
+    current_user = Depends(get_current_user),
+    _ = Depends(check_delete_rows_permission)
 ):
     # Проверяем существование записи и принадлежность к таблице
     record = record_service.get_record(record_id)
