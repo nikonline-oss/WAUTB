@@ -1,11 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
-from sqlalchemy.orm import Session
-from typing import List, Optional
+from fastapi import APIRouter, Depends, status, Query, Path
+from typing import List
 
-from ..database import get_db
 from ..schemas import user as schemas
-from ..services.user_services import UserService, get_user_service
-from ..dependencies import get_current_user, get_current_active_user
+from ..services.user_service import UserService, get_user_service
+from ..dependencies import get_current_active_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -41,7 +39,6 @@ def create_user(
 def get_current_user_info(
     current_user: schemas.UserResponse = Depends(get_current_active_user)
 ):
-    print(current_user)
     return current_user
 
 @router.get(
@@ -52,13 +49,12 @@ def get_current_user_info(
 )
 def get_user(
     user_id: int = Path(..., description="ID пользователя", gt=0),
-    # current_user: schemas.UserResponse = Depends(get_current_active_user),
     user_service: UserService = Depends(get_user_service)
 ):
     return user_service.get_user(user_id)
 
 @router.get(
-    "/", 
+    "/",
     response_model=List[schemas.UserResponse],
     summary="Список пользователей",
     description="Получение списка пользователей с пагинацией"
@@ -67,7 +63,6 @@ def get_users(
     skip: int = Query(0, ge=0, description="Количество записей для пропуска"),
     limit: int = Query(100, ge=1, le=1000, description="Лимит записей"),
     user_service: UserService = Depends(get_user_service),
-    # current_user: schemas.UserResponse = Depends(get_current_active_user)
 ):
     return user_service.get_users(skip, limit)
 

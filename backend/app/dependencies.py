@@ -39,9 +39,6 @@ async def get_current_user(
 
 async def get_current_active_user(current_user: schemas.UserResponse = Depends(get_current_user)):
     """Получение текущего активного пользователя"""
-    # Здесь можно добавить проверку is_active, если будет такое поле
-    # if not current_user.is_active:
-    #     raise HTTPException(status_code=400, detail="Неактивный пользователь")
     return current_user
 
 # Для проверки прав администратора
