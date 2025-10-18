@@ -5,7 +5,7 @@
 
 # DATABASE_URL: str = os.getenv(
 #     "DATABASE_URL",
-#     "postgresql+psycopg://postgres:Post0Nik1line@localhost:5432/excel_data_hub"
+#     "postgresql+psycopg://postgres:Post0Nik1line@localhost:5432/table_constructor"
 # )
 
 # config.py
@@ -23,7 +23,7 @@ class Settings:
     POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "Post0Nik1line")
     POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER", "localhost")
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "excel_data_hub")
+    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "table_constructor")
     
     # Кодируем пароль для URL
     ENCODED_PASSWORD = quote_plus(POSTGRES_PASSWORD)

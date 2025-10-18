@@ -2,7 +2,7 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from database import Base
+from ..database import Base
 
 
 # 2. ШАБЛОНЫ ТАБЛИЦ
@@ -18,3 +18,7 @@ class TableTemplate(Base):
     # Связи
     columns = relationship("TableColumn", back_populates="table_template", cascade="all, delete-orphan")
     records = relationship("TableRecord", back_populates="table_template")
+
+    creator = relationship("User", back_populates="created_templates")
+    columns = relationship("TableColumn", back_populates="table_template", cascade="all, delete-orphan")
+    records = relationship("TableRecord", back_populates="table_template", cascade="all, delete-orphan")
