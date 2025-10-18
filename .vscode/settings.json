@@ -1,0 +1,11 @@
+{
+    "python-envs.pythonProjects": [],
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "1221",
+            "database": "${workspaceFolder:WAUTB}/backend/test.db"
+        }
+    ]
+}

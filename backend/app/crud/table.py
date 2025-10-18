@@ -18,6 +18,7 @@ class TableTemplateRepository:
         db.refresh(db_template)
         return db_template
     
+    
     def create_with_columns(self, db: Session, template_create: TableTemplateCreateWithColumns) -> TableTemplate:
         db_template = TableTemplate(name=template_create.name)
         db.add(db_template)
