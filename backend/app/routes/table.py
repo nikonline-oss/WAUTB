@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
 from typing import List
 
 from ..schemas import table as schemas
@@ -57,24 +57,181 @@ def update_table_template(
 ):
     return table_service.update_template(table_id, table_data)
 
-
-@router.post(
-    "/{table_id}",
-    response_model=schemas.TableRecordResponse
+@router.delete(
+    "/{table_id}/template",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить шаблон таблицы",
+    description="Удаление шаблона таблицы и всех связанных данных"
 )
-def add_record(
-    table_id: int = Path(..., gt=0),
-    record_data: schemas.TableRecordCreate = None,
-    table_service: TableRecordService = Depends(get_table_record_service)
+def delete_table_template(
+    table_id: int = Path(..., description="ID шаблона таблицы", gt=0),
+    table_service: TableTemplateService = Depends(get_table_template_service)
 ):
-    return table_service.create_record(record_data)
+    success = table_service.delete_template(table_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Шаблон таблицы не найден"
+        )
+    return {"message": "Шаблон таблицы успешно удален"}
+
+# TableColumn endpoints
+@router.post(
+    "/{table_id}/columns",
+    response_model=schemas.TableColumnResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Добавить колонку в таблицу",
+    description="Добавление новой колонки в шаблон таблицы"
+)
+def create_table_column(
+    table_id: int = Path(..., description="ID таблицы", gt=0),
+    column_data: schemas.TableColumnCreate = None,
+    column_service: TableColumnService = Depends(get_table_column_service)
+):
+    # Устанавливаем table_template_id из пути
+    column_data.table_template_id = table_id
+    return column_service.create_column(column_data)
 
 @router.get(
-    "/{table_id}",
-    response_model=List[schemas.TableRecordResponse]
+    "/{table_id}/columns",
+    response_model=List[schemas.TableColumnResponse],
+    summary="Получить колонки таблицы",
+    description="Получение списка всех колонок таблицы"
+)
+def get_table_columns(
+    table_id: int = Path(..., description="ID таблицы", gt=0),
+    column_service: TableColumnService = Depends(get_table_column_service)
+):
+    return column_service.get_columns_by_template(table_id)
+
+@router.put(
+    "/columns/{column_id}",
+    response_model=schemas.TableColumnResponse,
+    summary="Обновить колонку",
+    description="Обновление информации о колонке таблицы"
+)
+def update_table_column(
+    column_id: int = Path(..., description="ID колонки", gt=0),
+    column_data: schemas.TableColumnUpdate = None,
+    column_service: TableColumnService = Depends(get_table_column_service)
+):
+    return column_service.update_column(column_id, column_data)
+
+@router.delete(
+    "/columns/{column_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить колонку",
+    description="Удаление колонки из шаблона таблицы"
+)
+def delete_table_column(
+    column_id: int = Path(..., description="ID колонки", gt=0),
+    column_service: TableColumnService = Depends(get_table_column_service)
+):
+    success = column_service.delete_column(column_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Колонка не найдена"
+        )
+    return {"message": "Колонка успешно удалена"}
+
+
+# TableRecord endpoints
+@router.post(
+    "/{table_id}/records",
+    response_model=schemas.TableRecordResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Добавить запись в таблицу",
+    description="Добавление новой записи в таблицу"
+)
+def add_record(
+    table_id: int = Path(..., description="ID таблицы", gt=0),
+    record_data: schemas.TableRecordCreate = None,
+    record_service: TableRecordService = Depends(get_table_record_service)
+):
+    # Устанавливаем table_template_id из пути
+    record_data.table_template_id = table_id
+    return record_service.create_record(record_data)
+
+@router.get(
+    "/{table_id}/records",
+    response_model=List[schemas.TableRecordResponse],
+    summary="Получить записи таблицы",
+    description="Получение списка записей таблицы с пагинацией"
 )
 def get_records(
-    table_id: int = Path(..., gt=0),
-    table_service: TableRecordService = Depends(get_table_record_service)
+    table_id: int = Path(..., description="ID таблицы", gt=0),
+    skip: int = Query(0, ge=0, description="Количество записей для пропуска"),
+    limit: int = Query(100, ge=1, le=1000, description="Лимит записей"),
+    record_service: TableRecordService = Depends(get_table_record_service)
 ):
-    return table_service.get_records_by_template(table_id)
+    return record_service.get_records_by_template(table_id, skip, limit)
+
+@router.get(
+    "/{table_id}/records/{record_id}",
+    response_model=schemas.TableRecordResponse,
+    summary="Получить запись по ID",
+    description="Получение конкретной записи таблицы по идентификатору"
+)
+def get_record(
+    table_id: int = Path(..., description="ID таблицы", gt=0),
+    record_id: int = Path(..., description="ID записи", gt=0),
+    record_service: TableRecordService = Depends(get_table_record_service)
+):
+    print(record_id)
+    record = record_service.get_record(record_id)
+    if not record or record.table_template_id != table_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Запись не найдена"
+        )
+    return record
+
+@router.put(
+    "/{table_id}/records/{record_id}",
+    response_model=schemas.TableRecordResponse,
+    summary="Обновить запись",
+    description="Обновление данных записи в таблице"
+)
+def update_record(
+    table_id: int = Path(..., description="ID таблицы", gt=0),
+    record_id: int = Path(..., description="ID записи", gt=0),
+    record_data: schemas.TableRecordUpdate = None,
+    record_service: TableRecordService = Depends(get_table_record_service)
+):
+    # В сервисе нужно добавить метод update_record
+    # Пока используем существующий, предполагая что record_id уникален
+    record = record_service.update_record(record_id, record_data)
+    if not record or record.table_template_id != table_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Запись не найдена"
+        )
+    return record
+
+@router.delete(
+    "/{table_id}/records/{record_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить запись",
+    description="Удаление записи из таблицы"
+)
+def delete_record(
+    table_id: int = Path(..., description="ID таблицы", gt=0),
+    record_id: int = Path(..., description="ID записи", gt=0),
+    record_service: TableRecordService = Depends(get_table_record_service)
+):
+    # Проверяем существование записи и принадлежность к таблице
+    record = record_service.get_record(record_id)
+    if not record or record.table_template_id != table_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Запись не найдена"
+        )
+    
+    success = record_service.delete_record(record_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Запись не найдена"
+        )
+    return {"message": "Запись успешно удалена"}
