@@ -78,6 +78,7 @@ class TableRecordService:
     
     def get_records_by_template(self, template_id: int, skip: int = 0, limit: int = 100) -> List[schemas.TableRecordResponse]:
         db_records = table_record_repository.get_by_template_id(self.db, template_id, skip, limit)
+        print([schemas.TableRecordResponse.model_validate(record) for record in db_records])
         return [schemas.TableRecordResponse.model_validate(record) for record in db_records]
     
     def update_record(self, record_id: int, record_data: schemas.TableRecordUpdate) -> schemas.TableRecordResponse:

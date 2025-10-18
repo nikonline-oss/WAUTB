@@ -22,5 +22,5 @@ def get_db():
 # Создание таблиц по моделям — будет вызвано при старте приложения
 def init_db():
     from . import models
-    Base.metadata.drop_all(bind=engine)      # Удалить ВСЕ таблицы
+    # Base.metadata.drop_all(bind=engine)      # Удалить ВСЕ таблицы
     Base.metadata.create_all(bind=engine)    # Создать ВСЕ таблицы заново

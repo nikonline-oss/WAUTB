@@ -104,7 +104,8 @@ class TableRecordRepository:
         return db.query(TableRecord).filter(TableRecord.id == record_id).first()
     
     def get_by_template_id(self, db: Session, template_id: int, skip: int = 0, limit: int = 100) -> List[TableRecord]:
-        return db.query(TableRecord).filter(TableRecord.table_template_id == template_id).offset(skip).limit(limit).all()
+        query = db.query(TableRecord).filter(TableRecord.table_template_id == template_id)
+        return query.offset(skip).limit(limit).all() 
     
     def create(self, db: Session, record_create: TableRecordCreate) -> TableRecord:
         db_record = TableRecord(**record_create.model_dump())
