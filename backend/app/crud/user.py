@@ -4,6 +4,8 @@ from .base import CRUDBase
 from ..models import User
 from ..services.auth_service import get_password_hash, verify_password
 
+
+
 class CRUDUser(CRUDBase):
     def __init__(self):
         super().__init__(User)
