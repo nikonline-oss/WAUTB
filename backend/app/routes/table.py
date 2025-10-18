@@ -77,4 +77,4 @@ def get_records(
     table_id: int = Path(..., gt=0),
     table_service: TableRecordService = Depends(get_table_record_service)
 ):
-    table_service.get_records_by_template(table_id)
+    return table_service.get_records_by_template(table_id)
