@@ -16,4 +16,4 @@ class TableTemplate(Base):
     
     columns = relationship("TableColumn", back_populates="table_template", cascade="all, delete-orphan")
     records = relationship("TableRecord", back_populates="table_template", cascade="all, delete-orphan")
-    user_permissions = relationship("UserTablePermission", back_populates="table_template", cascade="all, delete-orphan")
+    # user_permissions = relationship("UserTablePermission", back_populates="table_template", cascade="all, delete-orphan")
