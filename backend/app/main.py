@@ -1,13 +1,13 @@
 from __future__ import annotations
 from fastapi import FastAPI
 from .database import init_db
-from .routes.user import router as user_router
-from .routes.auth import router as auth_router
+from .routes import user_router, auth_router, department_router
+
 
 app = FastAPI(title="Table Constructor API", version="1.0.0")
-# print(user_router)
 app.include_router(user_router)
 app.include_router(auth_router)
+app.include_router(department_router)
 
 # Инициализация БД при старте
 @app.on_event("startup")

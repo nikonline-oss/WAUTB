@@ -12,7 +12,9 @@ class User(Base):
     lastname = Column(String(100), nullable=False)
     firstname = Column(String(100), nullable=False)
     middlename = Column(String(100), nullable=False, default="")
-    department = Column(String(100), nullable=True)
+    
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    department = relationship("Department", back_populates="users")
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

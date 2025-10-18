@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 
 from ..database import get_db
@@ -80,6 +80,5 @@ class UserService:
 
 
 def get_user_service(db: Session = Depends(get_db)):
-    print(db)
     user_service = UserService(db)
     return user_service
