@@ -18,9 +18,8 @@ interface Parameter {
 const CreateTableModal: React.FC<CreateTableModalProps> = ({ onClose, onCreate }) => {
   const [tableName, setTableName] = useState('Новая таблица');
   const [parameters, setParameters] = useState<Parameter[]>([
-    { id: 1, name: 'Тип данных', type: 'select', value: 'Текстовый', options: ['Текстовый', 'Числовой', 'Дата'] },
-    { id: 2, name: 'Количество столбцов', type: 'number', value: '3' },
-    { id: 3, name: 'Формат данных', type: 'select', value: 'Стандартный', options: ['Стандартный', 'Расширенный'] },
+    { id: 1, name: 'Количество столбцов', type: 'number', value: '3' },
+    { id: 2, name: 'Количество строк', type: 'number', value: '3' }
   ]);
   const [showTemplates, setShowTemplates] = useState(false);
 

@@ -402,6 +402,9 @@ const TableEditPage: React.FC = () => {
             )}
           </div>
           <div className="breadcrumb-right">
+            <button className="add-row-btn">
+                Журнал изменений
+              </button>
             <div className="view-mode-toggle">
               <button 
                 className={`mode-btn ${viewMode === 'view' ? 'active' : ''}`}
