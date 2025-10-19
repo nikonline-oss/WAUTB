@@ -1,3 +1,4 @@
+// src/components/TableEditPage/TableEditPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../Header/Header';
@@ -27,16 +28,19 @@ const TableEditPage: React.FC = () => {
   const navigate = useNavigate();
   const { tables, updateTable, addTable } = useApp();
   const { showAlert } = useAlert();
-
+  
   const [viewMode, setViewMode] = useState<ViewMode>('view');
   const [showSettings, setShowSettings] = useState(false);
   const [tableName, setTableName] = useState('Текущие заказы');
   const [isEditingName, setIsEditingName] = useState(false);
   const [sortState, setSortState] = useState<SortState>({ columnId: null, order: 'none' });
   const [dragState, setDragState] = useState<DragState | null>(null);
-
+  
+  // Новое состояние для блокировки управления столбцами
+  const [columnsLocked, setColumnsLocked] = useState(false);
+  
   const isNewTable = id === 'new';
-  const currentTable = tables.find(t => t.id === Number(id)) ||
+  const currentTable = tables.find(t => t.id === Number(id)) || 
     (isNewTable ? null : tables[0]);
 
   const [localTable, setLocalTable] = useState<Table | null>(null);
@@ -49,7 +53,7 @@ const TableEditPage: React.FC = () => {
       const newTable: Table = {
         id: Date.now(),
         name: 'Новая таблица',
-        image: '📊',
+        image: 'ФОТО',
         createdBy: 'currentUser',
         isMyProject: true,
         columns: [
@@ -92,7 +96,7 @@ const TableEditPage: React.FC = () => {
       updateTable(localTable.id, tableToSave);
     }
     setViewMode('view');
-
+    
     showAlert({
       type: 'success',
       title: 'Успех',
@@ -102,6 +106,16 @@ const TableEditPage: React.FC = () => {
   };
 
   const addColumn = () => {
+    if (columnsLocked) {
+      showAlert({
+        type: 'warning',
+        title: 'Ограничение',
+        message: 'У вас нет прав для добавления столбцов',
+        timer: 3
+      });
+      return;
+    }
+
     const newColumn: Column = {
       id: Date.now(),
       name: `Столбец ${localTable!.columns.length + 1}`,
@@ -118,6 +132,16 @@ const TableEditPage: React.FC = () => {
   };
 
   const removeColumn = (columnId: number) => {
+    if (columnsLocked) {
+      showAlert({
+        type: 'warning',
+        title: 'Ограничение',
+        message: 'У вас нет прав для удаления столбцов',
+        timer: 3
+      });
+      return;
+    }
+
     if (localTable!.columns.length <= 1) return;
     setLocalTable(prev => prev ? {
       ...prev,
@@ -131,12 +155,22 @@ const TableEditPage: React.FC = () => {
   };
 
   const updateColumn = (columnId: number, field: keyof Column, value: string) => {
+    if (columnsLocked) {
+      showAlert({
+        type: 'warning',
+        title: 'Ограничение',
+        message: 'У вас нет прав для изменения столбцов',
+        timer: 3
+      });
+      return;
+    }
+
     setLocalTable(prev => prev ? {
       ...prev,
-      columns: prev.columns.map(col =>
-        col.id === columnId ? {
-          ...col,
-          [field]: field === 'type' ? value as 'text' | 'number' | 'timestamp' | 'list' : value
+      columns: prev.columns.map(col => 
+        col.id === columnId ? { 
+          ...col, 
+          [field]: field === 'type' ? value as 'text' | 'number' | 'timestamp' | 'list' : value 
         } : col
       )
     } : null);
@@ -165,11 +199,11 @@ const TableEditPage: React.FC = () => {
 
   const updateCell = (rowId: number, columnId: number, value: any) => {
     if (isCellDisabled(rowId, columnId)) return;
-
+    
     setLocalTable(prev => prev ? {
       ...prev,
-      data: prev.data.map(row =>
-        row.id === rowId
+      data: prev.data.map(row => 
+        row.id === rowId 
           ? { ...row, data: { ...row.data, [columnId]: value } }
           : row
       )
@@ -183,22 +217,22 @@ const TableEditPage: React.FC = () => {
         if (prev.order === 'asc') newOrder = 'desc';
         else if (prev.order === 'desc') newOrder = 'none';
       }
-
+      
       if (newOrder === 'none') {
         return { columnId: null, order: 'none' };
       }
-
+      
       return { columnId, order: newOrder };
     });
   };
 
   const getSortedData = () => {
     if (sortState.order === 'none' || !sortState.columnId || !localTable) return localTable?.data || [];
-
+    
     return [...localTable.data].sort((a, b) => {
       const aVal = a.data[sortState.columnId!];
       const bVal = b.data[sortState.columnId!];
-
+      
       if (sortState.order === 'asc') {
         return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
       } else {
@@ -209,6 +243,7 @@ const TableEditPage: React.FC = () => {
 
   const handleDragStart = (type: 'column' | 'row', id: number, index: number) => {
     if (viewMode !== 'edit') return;
+    if (type === 'column' && columnsLocked) return;
     setDragState({ type, id, index });
   };
 
@@ -221,12 +256,22 @@ const TableEditPage: React.FC = () => {
     if (!dragState || viewMode !== 'edit' || !localTable) return;
 
     if (dragState.type === 'column') {
+      if (columnsLocked) {
+        showAlert({
+          type: 'warning',
+          title: 'Ограничение',
+          message: 'У вас нет прав для перемещения столбцов',
+          timer: 3
+        });
+        return;
+      }
+
       const newColumns = [...localTable.columns];
       const [movedColumn] = newColumns.splice(dragState.index, 1);
       newColumns.splice(targetIndex, 0, movedColumn);
-
+      
       setLocalTable(prev => prev ? { ...prev, columns: newColumns } : null);
-
+      
       showAlert({
         type: 'success',
         title: 'Успех',
@@ -237,9 +282,9 @@ const TableEditPage: React.FC = () => {
       const newData = [...localTable.data];
       const [movedRow] = newData.splice(dragState.index, 1);
       newData.splice(targetIndex, 0, movedRow);
-
+      
       setLocalTable(prev => prev ? { ...prev, data: newData } : null);
-
+      
       showAlert({
         type: 'success',
         title: 'Успех',
@@ -288,10 +333,22 @@ const TableEditPage: React.FC = () => {
     });
   };
 
+  const toggleColumnsLocked = () => {
+    setColumnsLocked(prev => !prev);
+    showAlert({
+      type: 'info',
+      title: columnsLocked ? 'Столбцы разблокированы' : 'Столбцы заблокированы',
+      message: columnsLocked 
+        ? 'Теперь можно управлять столбцами' 
+        : 'Управление столбцами заблокировано',
+      timer: 2
+    });
+  };
+
   const isCellDisabled = (rowId: number, columnId: number) => {
-    return disabledCells.has(`${rowId}-${columnId}`) ||
-      disabledRows.has(rowId) ||
-      disabledColumns.has(columnId);
+    return disabledCells.has(`${rowId}-${columnId}`) || 
+           disabledRows.has(rowId) || 
+           disabledColumns.has(columnId);
   };
 
   const sortedData = getSortedData();
@@ -318,12 +375,12 @@ const TableEditPage: React.FC = () => {
   return (
     <div className="table-edit-page">
       <Header />
-
+      
       <div className="table-edit-content">
         <div className="breadcrumb">
           <div className="breadcrumb-left">
             <span className="breadcrumb-text">
-              Мои таблицы -
+              Мои таблицы  
             </span>
             {isEditingName ? (
               <input
@@ -336,7 +393,7 @@ const TableEditPage: React.FC = () => {
                 autoFocus
               />
             ) : (
-              <span
+              <span 
                 className={`table-name ${viewMode === 'edit' ? 'editable' : ''}`}
                 onClick={handleTableNameClick}
               >
@@ -346,20 +403,20 @@ const TableEditPage: React.FC = () => {
           </div>
           <div className="breadcrumb-right">
             <div className="view-mode-toggle">
-              <button
+              <button 
                 className={`mode-btn ${viewMode === 'view' ? 'active' : ''}`}
                 onClick={() => setViewMode('view')}
               >
                 Просмотр
               </button>
-              <button
+              <button 
                 className={`mode-btn ${viewMode === 'edit' ? 'active' : ''}`}
                 onClick={() => setViewMode('edit')}
               >
                 Редактирование
               </button>
             </div>
-            <button
+            <button 
               className="settings-button"
               onClick={() => setShowSettings(true)}
             >
@@ -371,17 +428,28 @@ const TableEditPage: React.FC = () => {
         <div className="table-container">
           {viewMode === 'edit' && (
             <div className="table-actions">
-              <button className="add-column-btn" onClick={addColumn}>
+              <button 
+                className={`add-column-btn ${columnsLocked ? 'disabled' : ''}`}
+                onClick={addColumn}
+                title={columnsLocked ? 'Добавление столбцов заблокировано' : 'Добавить столбец'}
+              >
                 + Добавить столбец
               </button>
               <button className="add-row-btn" onClick={addRow}>
                 + Добавить строку
               </button>
-              <button
+              <button 
                 className="import-excel-btn"
                 onClick={() => console.log('Импорт из Excel')}
               >
-              Импорт из Excel
+                Импорт из Excel
+              </button>
+              <button 
+                className={`lock-columns-btn ${columnsLocked ? 'locked' : ''}`}
+                onClick={toggleColumnsLocked}
+                title={columnsLocked ? 'Разблокировать столбцы' : 'Заблокировать столбцы'}
+              >
+                {columnsLocked ? '🔓' : '🔒'} Столбцы
               </button>
               <div className="drag-hint">
                 Перетаскивайте заголовки столбцов и строк для изменения порядка
@@ -394,17 +462,17 @@ const TableEditPage: React.FC = () => {
               <thead>
                 <tr>
                   {columns.map((column, index) => (
-                    <th
-                      key={column.id}
-                      className={`table-header ${disabledColumns.has(column.id) ? 'disabled' : ''}`}
-                      draggable={viewMode === 'edit'}
+                    <th 
+                      key={column.id} 
+                      className={`table-header ${disabledColumns.has(column.id) ? 'disabled' : ''} ${columnsLocked ? 'locked' : ''}`}
+                      draggable={viewMode === 'edit' && !columnsLocked}
                       onDragStart={() => handleDragStart('column', column.id, index)}
                       onDragOver={(e) => handleDragOver(e, index)}
                       onDrop={() => handleDrop(index)}
                     >
                       <div className="column-header">
                         <div className="column-title-section">
-                          {viewMode === 'edit' ? (
+                          {viewMode === 'edit' && !columnsLocked ? (
                             <input
                               type="text"
                               value={column.name}
@@ -414,41 +482,47 @@ const TableEditPage: React.FC = () => {
                           ) : (
                             <span className="column-name">{column.name}</span>
                           )}
-                          <button
+                          <button 
                             className="sort-button"
                             onClick={() => handleSort(column.id)}
                           >
                             {getSortIcon(column.id)}
                           </button>
                         </div>
-
+                        
                         {viewMode === 'edit' && (
                           <div className="column-controls">
-                            <select
-                              value={column.type}
-                              onChange={(e) => updateColumn(column.id, 'type', e.target.value as any)}
-                              className="column-type-select"
-                            >
-                              <option value="text">Текст</option>
-                              <option value="number">Число</option>
-                              <option value="timestamp">Дата/время</option>
-                              <option value="list">Список</option>
-                            </select>
-                            <button
-                              className={`toggle-disabled-btn ${disabledColumns.has(column.id) ? 'disabled' : ''}`}
-                              onClick={() => toggleColumnDisabled(column.id)}
-                              title={disabledColumns.has(column.id) ? 'Включить столбец' : 'Отключить столбец'}
-                            >
-                              {disabledColumns.has(column.id) ? '👁️' : '👁️‍🗨️'}
-                            </button>
-                            {columns.length > 1 && (
-                              <button
-                                className="remove-column-btn"
-                                onClick={() => removeColumn(column.id)}
-                                title="Удалить столбец"
-                              >
-                                ×
-                              </button>
+                            {!columnsLocked ? (
+                              <>
+                                <select
+                                  value={column.type}
+                                  onChange={(e) => updateColumn(column.id, 'type', e.target.value as any)}
+                                  className="column-type-select"
+                                >
+                                  <option value="text">Текст</option>
+                                  <option value="number">Число</option>
+                                  <option value="timestamp">Дата/время</option>
+                                  <option value="list">Список</option>
+                                </select>
+                                <button 
+                                  className={`toggle-disabled-btn ${disabledColumns.has(column.id) ? 'disabled' : ''}`}
+                                  onClick={() => toggleColumnDisabled(column.id)}
+                                  title={disabledColumns.has(column.id) ? 'Включить столбец' : 'Отключить столбец'}
+                                >
+                                  {disabledColumns.has(column.id) ? '👁️' : '👁️‍🗨️'}
+                                </button>
+                                {columns.length > 1 && (
+                                  <button 
+                                    className="remove-column-btn"
+                                    onClick={() => removeColumn(column.id)}
+                                    title="Удалить столбец"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </>
+                            ) : (
+                              <span className="columns-locked-label">Заблокировано</span>
                             )}
                           </div>
                         )}
@@ -460,8 +534,8 @@ const TableEditPage: React.FC = () => {
               </thead>
               <tbody>
                 {sortedData.map((row, rowIndex) => (
-                  <tr
-                    key={row.id}
+                  <tr 
+                    key={row.id} 
                     className={`table-row ${disabledRows.has(row.id) ? 'disabled' : ''}`}
                     draggable={viewMode === 'edit'}
                     onDragStart={() => handleDragStart('row', row.id, rowIndex)}
@@ -469,8 +543,8 @@ const TableEditPage: React.FC = () => {
                     onDrop={() => handleDrop(rowIndex)}
                   >
                     {columns.map(column => (
-                      <td
-                        key={column.id}
+                      <td 
+                        key={column.id} 
                         className={`table-cell ${isCellDisabled(row.id, column.id) ? 'disabled' : ''}`}
                       >
                         {viewMode === 'edit' ? (
@@ -507,7 +581,7 @@ const TableEditPage: React.FC = () => {
                           <span className="cell-value">{row.data[column.id] || ''}</span>
                         )}
                         {viewMode === 'edit' && (
-                          <button
+                          <button 
                             className={`cell-toggle-btn ${isCellDisabled(row.id, column.id) ? 'disabled' : ''}`}
                             onClick={() => toggleCellDisabled(row.id, column.id)}
                             title={isCellDisabled(row.id, column.id) ? 'Включить ячейку' : 'Отключить ячейку'}
@@ -519,14 +593,14 @@ const TableEditPage: React.FC = () => {
                     ))}
                     {viewMode === 'edit' && (
                       <td className="row-actions-cell">
-                        <button
+                        <button 
                           className={`toggle-row-btn ${disabledRows.has(row.id) ? 'disabled' : ''}`}
                           onClick={() => toggleRowDisabled(row.id)}
                           title={disabledRows.has(row.id) ? 'Включить строку' : 'Отключить строку'}
                         >
                           {disabledRows.has(row.id) ? '👁️' : '👁️‍🗨️'}
                         </button>
-                        <button
+                        <button 
                           className="remove-row-btn"
                           onClick={() => removeRow(row.id)}
                           title="Удалить строку"
