@@ -75,9 +75,9 @@ check_edit_structure_permission = create_permission_checker("edit_structure")
 async def get_admin_user(current_user: schemas.UserResponse = Depends(get_current_user)):
     """Проверка прав администратора"""
     # Временно закомментируем проверку роли, если поле отсутствует
-    # if not hasattr(current_user, 'role') or current_user.role != 'admin':
-    #     raise HTTPException(
-    #         status_code=status.HTTP_403_FORBIDDEN,
-    #         detail="Недостаточно прав. Требуются права администратора"
-    #     )
+    if not hasattr(current_user, 'role') or current_user.role != 'admin':
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав. Требуются права администратора"
+        )
     return current_user

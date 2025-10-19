@@ -1,7 +1,7 @@
 from __future__ import annotations
 from fastapi import FastAPI
 from .database import init_db
-from .routes import user_router, auth_router, department_router, table_router, permission_router
+from .routes import user_router, auth_router, department_router, table_router, permission_router,excel_router
 from .middleware.AuthMiddleware import AuthMiddleware
 
 app = FastAPI(title="Table Constructor API", version="1.0.0")
@@ -13,6 +13,7 @@ app.include_router(auth_router)
 app.include_router(department_router)
 app.include_router(table_router)
 app.include_router(permission_router)
+app.include_router(excel_router)
 
 # Инициализация БД при старте
 @app.on_event("startup")

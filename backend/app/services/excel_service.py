@@ -1,21 +1,18 @@
 # services/excel_service.py
 import pandas as pd
 from typing import Dict, List, Any, Tuple
-import tempfile
-import os
+import io  # Добавляем импорт io
 from datetime import datetime
 import json
 
 class ExcelService:
     @staticmethod
     def parse_excel_file(file_content: bytes) -> pd.DataFrame:
-        """Парсинг Excel файла"""
+        """Парсинг Excel файла из памяти (без временных файлов)"""
         try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp_file:
-                tmp_file.write(file_content)
-                tmp_file.flush()
-                df = pd.read_excel(tmp_file.name)
-                os.unlink(tmp_file.name)
+            # Используем BytesIO для чтения из памяти
+            with io.BytesIO(file_content) as buffer:
+                df = pd.read_excel(buffer)
             return df
         except Exception as e:
             raise ValueError(f"Ошибка при чтении Excel файла: {str(e)}")
@@ -143,7 +140,8 @@ class ExcelService:
                 if pd.isna(value):
                     record[col] = None
                 else:
-                    record[col] = str(value)
+                    # Для превью оставляем строковое представление
+                    record[col] = str(value) if not isinstance(value, (int, float, bool)) else value
             preview_data.append(record)
         
         return preview_data
@@ -186,14 +184,15 @@ class ExcelService:
         
         # Создаем словарь колонок для быстрого доступа
         column_dict = {col.name: col for col in table_columns}
-        
+        print(f"column_dict {df}")
         for index, row in df.iterrows():
             record_data = {}
-            
+            print(record_data)
             for column_name, excel_column in mapping.items():
+                print(f"column_name {column_name}, column {excel_column}")
                 if excel_column in df.columns:
                     value = row[excel_column]
-                    
+                    print(f"value {value}, column {excel_column}")
                     # Получаем информацию о типе данных колонки
                     col_info = column_dict.get(column_name)
                     data_type = col_info.data_type if col_info else 'text'
@@ -242,7 +241,8 @@ class ExcelService:
                 if pd.isna(value):
                     record[str(col)] = None
                 else:
-                    record[str(col)] = str(value)
+                    # Для создания таблицы сохраняем оригинальные типы
+                    record[str(col)] = value
             records_data.append({'data': record})
         
         table_template = {
@@ -274,11 +274,13 @@ class ExcelService:
                 return 0, errors
             
             # Трансформируем в записи
+            print(f"df in {df}, {mapping}, {table_columns}")
             records = ExcelService.transform_to_records(df, mapping, table_columns)
             
             return len(records), []
             
         except Exception as e:
+            print(e)
             return 0, [{'type': 'processing_error', 'message': str(e)}]
 
     @staticmethod

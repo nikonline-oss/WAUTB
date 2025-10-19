@@ -41,7 +41,7 @@ async def get_table_template(
     table_id: int = Path(..., description="ID таблицы", gt=0),
     table_service: TableTemplateService = Depends(get_table_template_service),
     current_user = Depends(get_current_user),
-    _ = Depends(check_view_permission)  # Убрал lambda, передаем саму функцию
+    _ = Depends(check_view_permission) 
 ):
     return table_service.get_template(table_id)
 
@@ -83,8 +83,7 @@ async def update_table_template(
 async def delete_table_template(
     table_id: int = Path(..., description="ID шаблона таблицы", gt=0),
     table_service: TableTemplateService = Depends(get_table_template_service),
-    current_user = Depends(get_current_user),
-    _ = Depends(check_edit_structure_permission)
+    current_user = Depends(get_admin_user)
 ):
     success = table_service.delete_template(table_id)
     if not success:

@@ -1,4 +1,5 @@
 # services/excel_import_service.py
+import pandas as pd
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 import logging
@@ -7,7 +8,7 @@ from ..database import get_db
 
 from .excel_service import ExcelService
 from ..crud.table import table_template_repository, table_column_repository, table_record_repository
-from ..schemas.table import TableRecordCreate
+from ..schemas.table import TableRecordCreate, TableTemplateCreate, TableColumnCreate
 from ..schemas.excel import ExcelImportResponse
 from fastapi import Depends, HTTPException, status, UploadFile
 
@@ -82,7 +83,7 @@ class ExcelImportService:
             
             # Обрабатываем импорт
             records_count, errors = ExcelService.process_excel_import(
-                file_content, table_template_id, mapping, table_columns, skip_first_rows
+                file_content, mapping, table_columns, skip_first_rows
             )
             
             if errors:
@@ -154,13 +155,11 @@ class ExcelImportService:
             table_template_data, records_data = ExcelService.create_table_from_excel(df, table_name)
             
             # Создаем шаблон таблицы
-            from ..schemas.table import TableTemplateCreate
             template_create = TableTemplateCreate(name=table_template_data['name'])
             db_template = table_template_repository.create(self.db, template_create)
             
             # Создаем колонки
             for column_data in table_template_data['columns']:
-                from ..schemas.table import TableColumnCreate
                 column_create = TableColumnCreate(
                     table_template_id=db_template.id,
                     **column_data
@@ -170,9 +169,17 @@ class ExcelImportService:
             # Создаем записи
             created_records = 0
             for record_data in records_data:
+                # Конвертируем значения в правильные типы для записи
+                converted_data = {}
+                for col_name, value in record_data['data'].items():
+                    if pd.isna(value):
+                        converted_data[col_name] = None
+                    else:
+                        converted_data[col_name] = value
+                
                 record_create = TableRecordCreate(
                     table_template_id=db_template.id,
-                    data=record_data['data']
+                    data=converted_data
                 )
                 table_record_repository.create(self.db, record_create)
                 created_records += 1
@@ -191,6 +198,7 @@ class ExcelImportService:
                 'success': False,
                 'message': f'Ошибка при создании таблицы: {str(e)}'
             }
-
+    
+    # Фабрики для dependency injection
 def get_excel_import_service(db: Session = Depends(get_db)):
     return ExcelImportService(db)
