@@ -101,7 +101,9 @@ class TableColumnRepository:
 
 class TableRecordRepository:
     def get_by_id(self, db: Session, record_id: int) -> Optional[TableRecord]:
-        return db.query(TableRecord).filter(TableRecord.id == record_id).first()
+        reco = db.query(TableRecord).filter(TableRecord.id == record_id).first()
+        print(reco)
+        return reco
     
     def get_by_template_id(self, db: Session, template_id: int, skip: int = 0, limit: int = 100) -> List[TableRecord]:
         query = db.query(TableRecord).filter(TableRecord.table_template_id == template_id)

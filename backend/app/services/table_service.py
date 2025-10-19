@@ -52,6 +52,12 @@ class TableColumnService:
         db_column = table_column_repository.create(self.db, column_data)
         return schemas.TableColumnResponse.model_validate(db_column)
     
+    def get_column(self, column_id: int) -> Optional[schemas.TableColumnResponse]:
+        db_column = table_column_repository.get_by_id(self.db, column_id)
+        if not db_column:
+            return None
+        return schemas.TableColumnResponse.model_validate(db_column)
+
     def get_columns_by_template(self, template_id: int) -> List[schemas.TableColumnResponse]:
         db_columns = table_column_repository.get_by_template_id(self.db, template_id)
         return [schemas.TableColumnResponse.model_validate(column) for column in db_columns]
@@ -76,6 +82,12 @@ class TableRecordService:
         db_record = table_record_repository.create(self.db, record_data)
         return schemas.TableRecordResponse.model_validate(db_record)
     
+    def get_record(self, record_id: int) -> Optional[schemas.TableRecordResponse]:
+        db_record = table_record_repository.get_by_id(self.db, record_id)
+        if not db_record:
+            return None
+        return schemas.TableRecordResponse.model_validate(db_record)
+
     def get_records_by_template(self, template_id: int, skip: int = 0, limit: int = 100) -> List[schemas.TableRecordResponse]:
         db_records = table_record_repository.get_by_template_id(self.db, template_id, skip, limit)
         print([schemas.TableRecordResponse.model_validate(record) for record in db_records])

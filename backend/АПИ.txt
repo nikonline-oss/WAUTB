@@ -1,0 +1,246 @@
+1. Аутентификация
+Логин пользователя
+http
+POST /login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+Ответ:
+
+json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "lastname": "Иванов",
+    "firstname": "Иван",
+    "middlename": "Иванович",
+    "department_id": 1,
+    "role": "user"
+  }
+}
+2. Пользователи
+Получить текущего пользователя
+http
+GET /users/me
+Authorization: Bearer <token>
+Создать пользователя (админ)
+http
+POST /users
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "password": "password123",
+  "lastname": "Петров",
+  "firstname": "Петр",
+  "middlename": "Петрович",
+  "department_id": 1
+}
+Получить список пользователей
+http
+GET /users?skip=0&limit=100
+Authorization: Bearer <token>
+Обновить пользователя
+http
+PUT /users/1
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "email": "updated@example.com",
+  "lastname": "Сидоров"
+}
+3. Отделы
+Создать отдел
+http
+POST /departments
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "IT отдел"
+}
+Получить список отделов
+http
+GET /departments?skip=0&limit=100
+Authorization: Bearer <token>
+4. Таблицы
+Создать таблицу (админ)
+http
+POST /tables/
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "name": "Моя таблица",
+  "columns": [
+    {
+      "name": "Название",
+      "data_type": "text",
+      "order_index": 0,
+      "config": {}
+    },
+    {
+      "name": "Количество",
+      "data_type": "number",
+      "order_index": 1,
+      "config": {}
+    }
+  ]
+}
+Получить список таблиц
+http
+GET /tables?skip=0&limit=100
+Authorization: Bearer <token>
+Получить структуру таблицы
+http
+GET /tables/1/template
+Authorization: Bearer <token>
+Получить колонки таблицы
+http
+GET /tables/1/columns
+Authorization: Bearer <token>
+Добавить колонку
+http
+POST /tables/1/columns
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "Новая колонка",
+  "data_type": "text",
+  "order_index": 2,
+  "config": {}
+}
+5. Данные таблиц
+Получить записи таблицы
+http
+GET /tables/1/records?skip=0&limit=100
+Authorization: Bearer <token>
+Ответ:
+
+json
+[
+  {
+    "id": 1,
+    "table_template_id": 1,
+    "data": {
+      "Название": "Запись 1",
+      "Количество": 10
+    },
+    "created_at": "2024-01-01T10:00:00",
+    "updated_at": "2024-01-01T10:00:00"
+  }
+]
+Добавить запись
+http
+POST /tables/1/records
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "table_template_id": 1,
+  "data": {
+    "Название": "Новая запись",
+    "Количество": 15
+  }
+}
+Обновить запись
+http
+PUT /tables/1/records/1
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "data": {
+    "Название": "Обновленная запись",
+    "Количество": 20
+  }
+}
+Удалить запись
+http
+DELETE /tables/1/records/1
+Authorization: Bearer <token>
+6. Импорт Excel
+Превью импорта в существующую таблицу
+http
+POST /excel/preview-import/1
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+file: <excel_file.xlsx>
+skip_first_rows: 0
+Ответ:
+
+json
+{
+  "columns": ["ExcelCol1", "ExcelCol2"],
+  "preview_data": [
+    {"ExcelCol1": "значение1", "ExcelCol2": "значение2"}
+  ],
+  "suggested_mapping": {
+    "Название": "ExcelCol1",
+    "Количество": "ExcelCol2"
+  },
+  "table_columns": [
+    {"name": "Название", "data_type": "text"},
+    {"name": "Количество", "data_type": "number"}
+  ]
+}
+Импорт данных
+http
+POST /excel/import/1
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+file: <excel_file.xlsx>
+mapping: '{"Название": "ExcelCol1", "Количество": "ExcelCol2"}'
+skip_first_rows: 0
+Ответ:
+
+json
+{
+  "success": true,
+  "imported_records": 10,
+  "errors": [],
+  "message": "Успешно импортировано 10 записей"
+}
+Создать таблицу из Excel (админ)
+http
+POST /excel/create-table
+Authorization: Bearer <admin_token>
+Content-Type: multipart/form-data
+
+file: <excel_file.xlsx>
+table_name: "Новая таблица из Excel"
+skip_first_rows: 0
+7. Права доступа
+Получить права пользователя (админ)
+http
+GET /permissions/user/1
+Authorization: Bearer <admin_token>
+Получить права на таблицу (админ)
+http
+GET /permissions/table/1
+Authorization: Bearer <admin_token>
+Создать/обновить право доступа (админ)
+http
+POST /permissions/
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "user_id": 1,
+  "table_template_id": 1,
+  "can_view": true,
+  "can_add_rows": true,
+  "can_edit_rows": false,
+  "can_delete_rows": false,
+  "can_edit_structure": false
+}
