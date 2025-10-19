@@ -19,7 +19,6 @@ const MainPage: React.FC = () => {
   const navigate = useNavigate();
   const { tables, deleteTable, addTable } = useApp();
   const { showAlert } = useAlert();
-
   
 
   const handleMenuToggle = (tableId: number, event: React.MouseEvent) => {

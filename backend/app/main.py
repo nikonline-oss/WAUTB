@@ -3,10 +3,18 @@ from fastapi import FastAPI
 from .database import init_db
 from .routes import user_router, auth_router, department_router, table_router, permission_router,excel_router
 from .middleware.AuthMiddleware import AuthMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Table Constructor API", version="1.0.0")
 
 app.add_middleware(AuthMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # или ["*"] для разработки
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(user_router)
 app.include_router(auth_router)
